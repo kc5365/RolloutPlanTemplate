@@ -1,0 +1,2392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EchoStar AI Training Rollout — Executive Command Center</title>
+<style>
+  :root {
+    --brand-dark: #0a1628;
+    --brand-blue: #0d3b6e;
+    --brand-accent: #1a6bb5;
+    --brand-light: #3d9be9;
+    --brand-teal: #00b4d8;
+    --brand-gold: #f4a20a;
+    --brand-green: #22c55e;
+    --brand-red: #ef4444;
+    --surface: #111827;
+    --surface2: #1f2937;
+    --surface3: #374151;
+    --text: #f9fafb;
+    --text-muted: #9ca3af;
+    --border: #374151;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--brand-dark);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #0d3b6e 0%, #0a1628 60%, #001a3a 100%);
+    border-bottom: 2px solid var(--brand-teal);
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-left h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+  }
+  .header-left .subtitle {
+    font-size: 13px;
+    color: var(--brand-teal);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  .header-badge {
+    background: rgba(0,180,216,0.15);
+    border: 1px solid var(--brand-teal);
+    border-radius: 6px;
+    padding: 8px 16px;
+    text-align: center;
+  }
+  .header-badge .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+  .header-badge .value { font-size: 14px; font-weight: 600; color: var(--brand-teal); margin-top: 2px; }
+
+  /* KPI STRIP */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .kpi-card {
+    background: var(--surface);
+    padding: 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .kpi-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+  .kpi-value { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
+  .kpi-sub { font-size: 12px; color: var(--text-muted); }
+  .kpi-card.accent .kpi-value { color: var(--brand-teal); }
+  .kpi-card.gold .kpi-value { color: var(--brand-gold); }
+  .kpi-card.green .kpi-value { color: var(--brand-green); }
+
+  /* TABS */
+  .tab-bar {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 14px 24px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--brand-teal);
+    border-bottom-color: var(--brand-teal);
+  }
+
+  /* MAIN CONTENT */
+  .content { padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* SECTION HEADERS */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .section-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .section-header .pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .pill-teal { background: rgba(0,180,216,0.15); color: var(--brand-teal); border: 1px solid rgba(0,180,216,0.3); }
+  .pill-gold { background: rgba(244,162,10,0.15); color: var(--brand-gold); border: 1px solid rgba(244,162,10,0.3); }
+  .pill-green { background: rgba(34,197,94,0.15); color: var(--brand-green); border: 1px solid rgba(34,197,94,0.3); }
+  .pill-blue { background: rgba(26,107,181,0.2); color: var(--brand-light); border: 1px solid rgba(26,107,181,0.4); }
+
+  /* RHYTHM CARDS */
+  .rhythm-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+  .rhythm-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .rhythm-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .rhythm-header.daily { background: linear-gradient(90deg, rgba(0,180,216,0.2), transparent); border-bottom: 1px solid rgba(0,180,216,0.2); }
+  .rhythm-header.weekly { background: linear-gradient(90deg, rgba(244,162,10,0.2), transparent); border-bottom: 1px solid rgba(244,162,10,0.2); }
+  .rhythm-header.monthly { background: linear-gradient(90deg, rgba(34,197,94,0.2), transparent); border-bottom: 1px solid rgba(34,197,94,0.2); }
+  .rhythm-icon { font-size: 20px; }
+  .rhythm-title { font-size: 14px; font-weight: 700; }
+  .rhythm-header.daily .rhythm-title { color: var(--brand-teal); }
+  .rhythm-header.weekly .rhythm-title { color: var(--brand-gold); }
+  .rhythm-header.monthly .rhythm-title { color: var(--brand-green); }
+  .rhythm-body { padding: 16px 20px; }
+  .rhythm-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 13px;
+  }
+  .rhythm-item:last-child { border-bottom: none; }
+  .ri-channel {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    align-self: flex-start;
+    margin-top: 1px;
+  }
+  .ch-email { background: rgba(26,107,181,0.2); color: var(--brand-light); }
+  .ch-teams { background: rgba(75,0,130,0.3); color: #c084fc; }
+  .ch-lms { background: rgba(34,197,94,0.15); color: var(--brand-green); }
+  .ch-exec { background: rgba(244,162,10,0.15); color: var(--brand-gold); }
+  .ch-sms { background: rgba(0,180,216,0.15); color: var(--brand-teal); }
+  .ch-portal { background: rgba(59,130,246,0.2); color: #60a5fa; }
+  .ri-text { color: var(--text-muted); line-height: 1.4; }
+  .ri-text strong { color: var(--text); }
+
+  /* AUDIENCE TABLE */
+  .audience-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+  .audience-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .audience-card h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .audience-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 12px;
+  }
+  .audience-row:last-child { border-bottom: none; }
+  .ar-label { color: var(--text-muted); font-weight: 500; }
+  .ar-value { color: var(--text); }
+
+  /* METRICS */
+  .metrics-tool-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  .tool-block {
+    background: var(--surface2);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .tool-block-header {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .tool-block-header.quicksight { background: linear-gradient(90deg, rgba(255,153,0,0.2), transparent); border-bottom: 1px solid rgba(255,153,0,0.2); }
+  .tool-block-header.cowork { background: linear-gradient(90deg, rgba(0,180,216,0.2), transparent); border-bottom: 1px solid rgba(0,180,216,0.2); }
+  .tool-name { font-size: 15px; font-weight: 700; }
+  .tool-block-header.quicksight .tool-name { color: #ff9900; }
+  .tool-block-header.cowork .tool-name { color: var(--brand-teal); }
+  .tool-scope { font-size: 12px; color: var(--text-muted); }
+  .tool-block-body { padding: 16px 20px; }
+
+  .metric-category {
+    margin-bottom: 18px;
+  }
+  .metric-cat-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .metric-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px 100px;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 12px;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-row.header-row {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    padding-bottom: 4px;
+  }
+  .metric-name { color: var(--text); }
+  .metric-target { color: var(--brand-green); font-weight: 600; text-align: right; }
+  .metric-caution { color: var(--brand-gold); font-weight: 600; text-align: right; }
+  .metric-cadence {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .cad-daily { background: rgba(0,180,216,0.15); color: var(--brand-teal); }
+  .cad-weekly { background: rgba(244,162,10,0.15); color: var(--brand-gold); }
+  .cad-monthly { background: rgba(34,197,94,0.15); color: var(--brand-green); }
+
+  /* POWER USER DEFINITION */
+  .power-user-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+  .pu-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .pu-header {
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .pu-header.qs { background: linear-gradient(90deg, rgba(255,153,0,0.2), transparent); border-bottom: 1px solid rgba(255,153,0,0.2); color: #ff9900; }
+  .pu-header.cw { background: linear-gradient(90deg, rgba(0,180,216,0.2), transparent); border-bottom: 1px solid rgba(0,180,216,0.2); color: var(--brand-teal); }
+  .pu-body { padding: 16px 20px; }
+  .pu-tier {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 12px;
+    align-items: flex-start;
+  }
+  .pu-tier:last-child { border-bottom: none; }
+  .tier-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+  }
+  .tier-power { background: rgba(34,197,94,0.15); color: var(--brand-green); border: 1px solid rgba(34,197,94,0.3); }
+  .tier-advanced { background: rgba(244,162,10,0.15); color: var(--brand-gold); border: 1px solid rgba(244,162,10,0.3); }
+  .tier-active { background: rgba(26,107,181,0.2); color: var(--brand-light); border: 1px solid rgba(26,107,181,0.3); }
+  .tier-def { color: var(--text-muted); line-height: 1.5; }
+  .tier-def strong { color: var(--text); }
+
+  /* MILESTONE TIMELINE */
+  .timeline {
+    position: relative;
+    padding-left: 32px;
+    margin-bottom: 32px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: linear-gradient(180deg, var(--brand-teal), var(--brand-accent), var(--brand-green));
+  }
+  .tl-item {
+    position: relative;
+    padding: 0 0 28px 20px;
+  }
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--brand-dark);
+    border: 2px solid var(--brand-teal);
+  }
+  .tl-item.gold::before { border-color: var(--brand-gold); }
+  .tl-item.green::before { border-color: var(--brand-green); }
+  .tl-phase {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--brand-teal);
+    margin-bottom: 4px;
+  }
+  .tl-item.gold .tl-phase { color: var(--brand-gold); }
+  .tl-item.green .tl-phase { color: var(--brand-green); }
+  .tl-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .tl-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ESCALATION TABLE */
+  .escalation-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    background: var(--surface2);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .escalation-table th {
+    background: var(--surface3);
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .escalation-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: var(--text-muted);
+    vertical-align: top;
+  }
+  .escalation-table tr:last-child td { border-bottom: none; }
+  .escalation-table td:first-child { color: var(--text); font-weight: 500; }
+
+  /* RACI */
+  .raci-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    background: var(--surface2);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .raci-table th {
+    background: var(--surface3);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .raci-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    vertical-align: middle;
+  }
+  .raci-table tr:last-child td { border-bottom: none; }
+  .r-badge {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 22px;
+  }
+  .r-R { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .r-A { background: rgba(244,162,10,0.15); color: var(--brand-gold); border: 1px solid rgba(244,162,10,0.3); }
+  .r-C { background: rgba(26,107,181,0.2); color: var(--brand-light); border: 1px solid rgba(26,107,181,0.3); }
+  .r-I { background: rgba(156,163,175,0.1); color: var(--text-muted); border: 1px solid rgba(156,163,175,0.2); }
+  .r-dash { color: var(--border); }
+
+  /* INSIGHT BOXES */
+  .insight-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .insight-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    border-left: 3px solid;
+  }
+  .insight-box.teal { border-left-color: var(--brand-teal); }
+  .insight-box.gold { border-left-color: var(--brand-gold); }
+  .insight-box.green { border-left-color: var(--brand-green); }
+  .insight-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; margin-bottom: 6px; }
+  .insight-box.teal .insight-title { color: var(--brand-teal); }
+  .insight-box.gold .insight-title { color: var(--brand-gold); }
+  .insight-box.green .insight-title { color: var(--brand-green); }
+  .insight-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+  /* FOOTER */
+  footer {
+    margin-top: 40px;
+    padding: 16px 40px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>🛰 EchoStar AI Training Rollout</h1>
+    <div class="subtitle">Executive Command Center · AI Transformation Program</div>
+  </div>
+  <div style="display:flex;gap:16px;">
+    <div class="header-badge">
+      <div class="label">QuickSight Scope</div>
+      <div class="value">8k–12k Users</div>
+    </div>
+    <div class="header-badge">
+      <div class="label">Claude Cowork Scope</div>
+      <div class="value">500+ Power Users</div>
+    </div>
+    <div class="header-badge">
+      <div class="label">Program Status</div>
+      <div class="value" style="color:var(--brand-gold);">Active Rollout</div>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi-card accent">
+    <div class="kpi-label">Total Addressable Users</div>
+    <div class="kpi-value">12,500+</div>
+    <div class="kpi-sub">QuickSight 8k–12k · Cowork 500+</div>
+  </div>
+  <div class="kpi-card gold">
+    <div class="kpi-label">Target Activation (90-day)</div>
+    <div class="kpi-value">80%</div>
+    <div class="kpi-sub">QuickSight · up to 9,600 seats</div>
+  </div>
+  <div class="kpi-card green">
+    <div class="kpi-label">Power User Target</div>
+    <div class="kpi-value">500</div>
+    <div class="kpi-sub">Claude Cowork certified</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Comms Touchpoints</div>
+    <div class="kpi-value">3</div>
+    <div class="kpi-sub">Daily · Weekly · Monthly</div>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="showTab('comms')">📣 Communication Plan</div>
+  <div class="tab" onclick="showTab('operating-model')">🏗 Operating Model</div>
+  <div class="tab" onclick="showTab('product-intel')">🔬 Product Intelligence</div>
+  <div class="tab" onclick="showTab('integration')">🔌 Integration Plan</div>
+  <div class="tab" onclick="showTab('tool-guide')">🔀 QuickSight vs. Cowork</div>
+  <div class="tab" onclick="showTab('metrics-qs')">📊 QuickSight Metrics</div>
+  <div class="tab" onclick="showTab('metrics-cw')">🤖 Claude Cowork Metrics</div>
+  <div class="tab" onclick="showTab('power-users')">⚡ Power User Framework</div>
+  <div class="tab" onclick="showTab('governance')">🏛 Governance & RACI</div>
+</div>
+
+<!-- ===================== TAB: OPERATING MODEL ===================== -->
+<div id="tab-operating-model" class="tab-panel">
+<style>
+  .lane-card { border-radius:12px; overflow:hidden; margin-bottom:20px; border:1px solid var(--border); }
+  .lane-header { padding:18px 24px; display:flex; align-items:center; gap:14px; }
+  .lane-icon { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .lane-title { font-size:18px; font-weight:800; letter-spacing:0.5px; }
+  .lane-sub { font-size:12px; margin-top:3px; }
+  .lane-body { padding:20px 24px; background:var(--surface2); }
+  .lane-body-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .lane-bullets { list-style:none; padding:0; margin:0 0 0 0; }
+  .lane-bullets li { font-size:13px; color:var(--text-muted); padding:5px 0 5px 16px; position:relative; line-height:1.5; border-bottom:1px solid rgba(255,255,255,0.04); }
+  .lane-bullets li:last-child { border-bottom:none; }
+  .lane-bullets li::before { content:"›"; position:absolute; left:0; font-weight:700; }
+  .team-box { background:var(--surface); border-radius:10px; padding:16px; border:1px solid var(--border); }
+  .team-box-title { font-size:12px; font-weight:700; margin-bottom:10px; }
+  .team-bullets { list-style:none; padding:0; margin:0; }
+  .team-bullets li { font-size:12px; color:var(--text-muted); padding:4px 0 4px 14px; position:relative; line-height:1.5; }
+  .team-bullets li::before { content:"—"; position:absolute; left:0; }
+
+  /* LANE COLOURS */
+  .lane-rollout .lane-header { background:linear-gradient(90deg, rgba(13,59,110,0.5), rgba(13,59,110,0.1)); border-bottom:1px solid rgba(13,59,110,0.4); }
+  .lane-rollout .lane-icon { background:rgba(13,59,110,0.4); }
+  .lane-rollout .lane-title { color:#60a5fa; }
+  .lane-rollout .lane-sub { color:var(--text-muted); }
+  .lane-rollout .lane-bullets li::before { color:#60a5fa; }
+
+  .lane-product .lane-header { background:linear-gradient(90deg, rgba(244,162,10,0.2), rgba(244,162,10,0.05)); border-bottom:1px solid rgba(244,162,10,0.2); }
+  .lane-product .lane-icon { background:rgba(244,162,10,0.2); }
+  .lane-product .lane-title { color:var(--brand-gold); }
+  .lane-product .lane-sub { color:var(--text-muted); }
+  .lane-product .lane-bullets li::before { color:var(--brand-gold); }
+
+  .lane-dev .lane-header { background:linear-gradient(90deg, rgba(34,197,94,0.15), rgba(34,197,94,0.03)); border-bottom:1px solid rgba(34,197,94,0.15); }
+  .lane-dev .lane-icon { background:rgba(34,197,94,0.15); }
+  .lane-dev .lane-title { color:var(--brand-green); }
+  .lane-dev .lane-sub { color:var(--text-muted); }
+  .lane-dev .lane-bullets li::before { color:var(--brand-green); }
+
+  .scope-pill { display:inline-block; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; margin:4px 6px 4px 0; }
+</style>
+
+  <div class="section-header">
+    <h2>AI Platform Operations — Multi-Lane Functional Model</h2>
+    <span class="pill pill-blue">3-Lane Operating Model · AI Platforms Ops Org</span>
+  </div>
+
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:24px;font-size:13px;color:var(--text-muted);line-height:1.6;">
+    EchoStar's AI rollout operates across three parallel, interdependent lanes: <strong style="color:#60a5fa;">Rollout</strong> manages phasing and deployment; <strong style="color:var(--brand-gold);">Product Intelligence</strong> measures, analyzes, and directs; <strong style="color:var(--brand-green);">Development</strong> builds and automates. The lanes run concurrently — Product Intelligence continuously feeds Development, and Development surfaces health signals back to Rollout.
+  </div>
+
+  <!-- ROLLOUT LANE -->
+  <div class="lane-card lane-rollout">
+    <div class="lane-header">
+      <div class="lane-icon">▶</div>
+      <div>
+        <div class="lane-title">ROLLOUT</div>
+        <div class="lane-sub">Delivery of AI tools across EchoStar — managing importance, concentration & phasing of enterprise-wide deployment</div>
+      </div>
+    </div>
+    <div class="lane-body">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <span class="scope-pill" style="background:rgba(13,59,110,0.3);color:#60a5fa;border:1px solid rgba(96,165,250,0.3);">Claude Cowork — Select employee base (500+)</span>
+        <span class="scope-pill" style="background:rgba(255,153,0,0.1);color:#ff9900;border:1px solid rgba(255,153,0,0.3);">Amazon QuickSight — 8,000 to 12,000 employees company-wide</span>
+      </div>
+      <ul class="lane-bullets">
+        <li>Manage deployment phasing — sequence departments by strategic importance and readiness</li>
+        <li>Control concentration — avoid overwhelming IT support or training capacity in any single wave</li>
+        <li>Govern access provisioning and seat activation timelines for both platforms</li>
+        <li>Coordinate with Product Intelligence to gate next wave launches on adoption health signals</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PRODUCT INTELLIGENCE LANE -->
+  <div class="lane-card lane-product">
+    <div class="lane-header">
+      <div class="lane-icon">📊</div>
+      <div>
+        <div class="lane-title">PRODUCT INTELLIGENCE <span style="font-size:13px;font-weight:500;color:var(--text-muted);margin-left:8px;">— Sharath's Lane</span></div>
+        <div class="lane-sub">Product ownership · Measurement frameworks · Enablement intelligence</div>
+      </div>
+      <span class="pill pill-gold" style="margin-left:auto;flex-shrink:0;">Deep Dive Below →</span>
+    </div>
+    <div class="lane-body">
+      <div class="lane-body-grid">
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--brand-gold);font-weight:700;margin-bottom:8px;">Lane Responsibilities</div>
+          <ul class="lane-bullets">
+            <li>Understand exactly how the rollout is progressing across departments</li>
+            <li>Analyze how AI will best support deployment, enablement & adoption</li>
+            <li>Define leading & lagging indicators — measure usage, value & outcomes</li>
+            <li>Feed all intelligence to the Development lane for implementation</li>
+          </ul>
+        </div>
+        <div class="team-box">
+          <div class="team-box-title" style="color:var(--brand-gold);">Analytical Team (Sharath)</div>
+          <ul class="team-bullets">
+            <li>Analyze the flows and <strong style="color:var(--text);">document potential for improvements</strong></li>
+            <li>Document <strong style="color:var(--text);">improvement needs via AI implementation</strong> — Agents & Assistants</li>
+            <li><strong style="color:var(--text);">QA</strong> of developed Agents & Assistants</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEVELOPMENT LANE -->
+  <div class="lane-card lane-dev">
+    <div class="lane-header">
+      <div class="lane-icon">⟨/⟩</div>
+      <div>
+        <div class="lane-title">DEVELOPMENT</div>
+        <div class="lane-sub">100% technical implementation · Responds to Product Intelligence direction</div>
+      </div>
+    </div>
+    <div class="lane-body">
+      <div class="lane-body-grid">
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--brand-green);font-weight:700;margin-bottom:8px;">Lane Responsibilities</div>
+          <ul class="lane-bullets">
+            <li>Build AI Assistants for end users, support staff, Ops & leadership</li>
+            <li>Build autonomous AI Agents that independently evaluate metrics</li>
+            <li>Automate measurement: installation → deployment → usage → value</li>
+            <li>Surface overall rollout health end-to-end across the board</li>
+          </ul>
+        </div>
+        <div class="team-box">
+          <div class="team-box-title" style="color:var(--brand-green);">Technical Implementation Team</div>
+          <ul class="team-bullets">
+            <li>Consume requirements from the Product Intelligence team</li>
+            <li><strong style="color:var(--text);">Develop Agents and Assistants</strong></li>
+            <li>Coding best practices for design and development <strong style="color:var(--text);">(Claude Code)</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LANE INTERACTION -->
+  <div class="section-header" style="margin-top:8px;">
+    <h2>Lane Interaction Model</h2>
+    <span class="pill pill-teal">Continuous Feedback Loop</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;">
+    <div style="text-align:center;">
+      <div style="font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:6px;">ROLLOUT</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.5;">Provisions access<br>Sequences waves<br>Gates launches</div>
+    </div>
+    <div style="text-align:center;padding:0 16px;">
+      <div style="font-size:18px;color:var(--brand-gold);">⇄</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Health signals<br>& wave gating</div>
+    </div>
+    <div style="text-align:center;padding:16px;background:rgba(244,162,10,0.08);border-radius:8px;border:1px solid rgba(244,162,10,0.2);">
+      <div style="font-size:13px;font-weight:700;color:var(--brand-gold);margin-bottom:6px;">PRODUCT INTELLIGENCE</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.5;">Measures adoption<br>Identifies opportunities<br>Writes requirements<br>QAs output</div>
+    </div>
+    <div style="text-align:center;padding:0 16px;">
+      <div style="font-size:18px;color:var(--brand-green);">→</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Requirements<br>& direction</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:13px;font-weight:700;color:var(--brand-green);margin-bottom:6px;">DEVELOPMENT</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.5;">Builds Agents<br>Builds Assistants<br>Automates metrics</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== TAB: PRODUCT INTELLIGENCE ===================== -->
+<div id="tab-product-intel" class="tab-panel">
+
+  <div class="section-header">
+    <h2>Product Intelligence — Deep Dive</h2>
+    <span class="pill pill-gold">Sharath · Analytical Team · EchoStar AI Platforms Ops</span>
+  </div>
+
+  <div style="background:rgba(244,162,10,0.08);border:1px solid rgba(244,162,10,0.25);border-radius:12px;padding:16px 20px;margin-bottom:28px;">
+    <div style="font-size:13px;color:var(--text-muted);line-height:1.7;">
+      Product Intelligence is the <strong style="color:var(--text);">nerve center of the rollout</strong>. Sharath's team translates raw adoption data into actionable insight, documents where AI can be embedded as Agents & Assistants, and validates that what Development ships actually works. Without this lane, Development builds without direction and Rollout scales without signal.
+    </div>
+  </div>
+
+  <!-- 4 RESPONSIBILITIES -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(90deg,rgba(244,162,10,0.2),transparent);border-bottom:1px solid rgba(244,162,10,0.2);padding:12px 18px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">🔍</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--brand-gold);">1. Flow Analysis</div>
+          <div style="font-size:11px;color:var(--text-muted);">Analyze the flows & document potential for improvements</div>
+        </div>
+      </div>
+      <div style="padding:14px 18px;">
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">Map current-state workflows for every department receiving AI tools. Identify where friction, latency, manual steps, or repeated tasks represent improvement opportunities.</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--brand-gold);margin-bottom:6px;">Sharath's Team Delivers:</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.7;">
+          • Department workflow maps (current state vs. AI-augmented state)<br>
+          • Friction point inventory by process and role<br>
+          • Opportunity scoring matrix (impact × feasibility)<br>
+          • Before/after time estimates for high-priority flows
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(90deg,rgba(244,162,10,0.2),transparent);border-bottom:1px solid rgba(244,162,10,0.2);padding:12px 18px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">📋</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--brand-gold);">2. AI Implementation Docs</div>
+          <div style="font-size:11px;color:var(--text-muted);">Document improvement needs via AI — Agents & Assistants</div>
+        </div>
+      </div>
+      <div style="padding:14px 18px;">
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">Translate flow analysis into structured requirements for Development. Each requirement specifies whether the solution should be an Agent (autonomous, multi-step) or an Assistant (user-facing, interactive).</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--brand-gold);margin-bottom:6px;">Sharath's Team Delivers:</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.7;">
+          • Prioritized Agent & Assistant backlog (Jira/equivalent)<br>
+          • Functional requirement specs (not technical — what, not how)<br>
+          • User stories with acceptance criteria<br>
+          • Business case / estimated ROI per build item
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(90deg,rgba(244,162,10,0.2),transparent);border-bottom:1px solid rgba(244,162,10,0.2);padding:12px 18px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">📏</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--brand-gold);">3. Measurement Framework</div>
+          <div style="font-size:11px;color:var(--text-muted);">Define leading & lagging indicators — measure usage, value & outcomes</div>
+        </div>
+      </div>
+      <div style="padding:14px 18px;">
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">Own the full measurement stack — from installation signals to business value. Define what "good" looks like at every stage and build the QuickSight dashboards that surface these signals automatically.</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--brand-gold);margin-bottom:6px;">Leading Indicators (Predictive)</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:8px;">
+          • Seat activation rate by department & wave<br>
+          • Training completion rate (LMS module progress)<br>
+          • Connector setup rate (Cowork)<br>
+          • Time to first task / first dashboard
+        </div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--brand-gold);margin-bottom:6px;">Lagging Indicators (Outcome)</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.7;">
+          • Hours saved per user per week<br>
+          • Workflows automated (team-wide adoption)<br>
+          • Business value / ROI (loaded cost × hours saved)<br>
+          • Employee NPS on AI program
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(90deg,rgba(244,162,10,0.2),transparent);border-bottom:1px solid rgba(244,162,10,0.2);padding:12px 18px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">✅</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--brand-gold);">4. QA of Agents & Assistants</div>
+          <div style="font-size:11px;color:var(--text-muted);">Validate what Development ships before broad deployment</div>
+        </div>
+      </div>
+      <div style="padding:14px 18px;">
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">Product Intelligence owns quality assurance for every Agent and Assistant Development ships. This is a business-side QA — ensuring the tool solves the documented problem, not just that it runs without errors.</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--brand-gold);margin-bottom:6px;">Sharath's Team Delivers:</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.7;">
+          • Acceptance criteria review (does it meet the requirement spec?)<br>
+          • User acceptance testing with 3–5 pilot users before launch<br>
+          • Output quality scoring rubric (accuracy, completeness, tone)<br>
+          • Go/no-go sign-off before Rollout lane deploys broadly
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- INTELLIGENCE-TO-DEV HANDOFF -->
+  <div class="section-header">
+    <h2>Intelligence → Development Handoff Protocol</h2>
+    <span class="pill pill-teal">Weekly Cadence</span>
+  </div>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:28px;">
+    <div style="display:grid;grid-template-columns:200px 1fr 160px;background:var(--surface3);padding:8px 16px;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);font-weight:600;">
+      <div>Artifact</div><div>Description</div><div>Cadence</div>
+    </div>
+    <style>
+    .hi-row{display:grid;grid-template-columns:200px 1fr 160px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;align-items:start;}
+    .hi-row:last-child{border-bottom:none;}
+    .hi-name{color:var(--brand-gold);font-weight:600;}
+    .hi-desc{color:var(--text-muted);line-height:1.5;}
+    .hi-cad{font-size:11px;color:var(--text-muted);}
+    </style>
+    <div class="hi-row"><div class="hi-name">Weekly Intelligence Brief</div><div class="hi-desc">1-page summary of adoption signals, top friction points observed, and recommended Development priorities for the coming sprint. Presented in weekly Product Intelligence → Development sync.</div><div class="hi-cad">Weekly (Monday)</div></div>
+    <div class="hi-row"><div class="hi-name">Prioritized Build Backlog</div><div class="hi-desc">Running Jira (or equivalent) backlog of Agents & Assistants to build, ranked by impact score. Sharath's team owns priority order; Development owns sequencing by technical complexity.</div><div class="hi-cad">Maintained continuously</div></div>
+    <div class="hi-row"><div class="hi-name">Functional Requirement Spec</div><div class="hi-desc">For each backlog item entering active development: a 1–2 page document covering the problem statement, current workflow, desired AI behavior, example inputs/outputs, and acceptance criteria.</div><div class="hi-cad">Per backlog item</div></div>
+    <div class="hi-row"><div class="hi-name">QA Sign-Off Sheet</div><div class="hi-desc">Structured sign-off document completed by Sharath's team after user acceptance testing. Covers: requirement met (Y/N), output quality score (1–5), pilot user feedback summary, go/no-go decision.</div><div class="hi-cad">Per delivery</div></div>
+    <div class="hi-row"><div class="hi-name">Monthly Impact Report</div><div class="hi-desc">Quantified impact of deployed Agents & Assistants: tasks automated, hours saved, user satisfaction, business value. Input to ELT Business Review and the Rollout lane's wave-gating decisions.</div><div class="hi-cad">Monthly</div></div>
+  </div>
+
+  <!-- AGENT vs ASSISTANT DECISION -->
+  <div class="section-header">
+    <h2>Agent vs. Assistant — When to Build Which</h2>
+    <span class="pill pill-gold">For Sharath's Requirement Docs</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+    <div style="background:var(--surface2);border:1px solid rgba(0,180,216,0.3);border-radius:12px;overflow:hidden;">
+      <div style="background:rgba(0,180,216,0.12);border-bottom:1px solid rgba(0,180,216,0.2);padding:12px 18px;">
+        <div style="font-size:14px;font-weight:700;color:var(--brand-teal);">🤖 Build an AI Agent when…</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Autonomous · multi-step · runs without user prompting</div>
+      </div>
+      <div style="padding:14px 18px;font-size:12px;color:var(--text-muted);line-height:1.8;">
+        ✓ The task is <strong style="color:var(--text);">repeatable and schedulable</strong> (daily/weekly trigger)<br>
+        ✓ It spans <strong style="color:var(--text);">multiple systems</strong> (email + calendar + Jira + SharePoint)<br>
+        ✓ The steps are <strong style="color:var(--text);">predictable</strong> and don't require mid-task human judgment<br>
+        ✓ Current process is fully manual and takes &gt;30 min/week per person<br>
+        ✓ Output is a <strong style="color:var(--text);">structured artifact</strong> (report, digest, alert, log entry)<br><br>
+        <span style="color:var(--brand-teal);font-weight:600;">Examples at EchoStar:</span><br>
+        Weekly adoption metric digest auto-generated and emailed to managers<br>
+        Daily ticket volume alert sent to Ops lead if threshold exceeded<br>
+        Monthly impact report assembled from QuickSight + LMS + survey data
+      </div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid rgba(244,162,10,0.3);border-radius:12px;overflow:hidden;">
+      <div style="background:rgba(244,162,10,0.1);border-bottom:1px solid rgba(244,162,10,0.2);padding:12px 18px;">
+        <div style="font-size:14px;font-weight:700;color:var(--brand-gold);">💬 Build an AI Assistant when…</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Interactive · user-initiated · guides through a task</div>
+      </div>
+      <div style="padding:14px 18px;font-size:12px;color:var(--text-muted);line-height:1.8;">
+        ✓ The user needs to <strong style="color:var(--text);">interact</strong> and provide context mid-task<br>
+        ✓ Output requires <strong style="color:var(--text);">human judgment or approval</strong> at a decision point<br>
+        ✓ The task varies significantly in <strong style="color:var(--text);">scope or inputs</strong> each time<br>
+        ✓ Use case is about <strong style="color:var(--text);">augmenting a person</strong>, not replacing a process<br>
+        ✓ Output is a <strong style="color:var(--text);">draft</strong> that a human reviews before sending/publishing<br><br>
+        <span style="color:var(--brand-gold);font-weight:600;">Examples at EchoStar:</span><br>
+        Cowork skill that helps a manager draft a team adoption update email<br>
+        Assistant that helps a non-technical user query their QuickSight data in plain English<br>
+        Call prep assistant that pulls CRM + email context before a vendor meeting
+      </div>
+    </div>
+  </div>
+
+  <!-- SHARATH'S OPERATING RHYTHM -->
+  <div class="section-header">
+    <h2>Sharath's Operating Rhythm</h2>
+    <span class="pill pill-gold">Weekly + Monthly Cadence</span>
+  </div>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+    <div style="display:grid;grid-template-columns:120px 1fr 1fr;background:var(--surface3);padding:8px 16px;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);font-weight:600;">
+      <div>Cadence</div><div>Activity</div><div>Output / Deliverable</div>
+    </div>
+    <style>.sr-row{display:grid;grid-template-columns:120px 1fr 1fr;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;align-items:start;}.sr-row:last-child{border-bottom:none;}.sr-cad{font-weight:600;}.sr-act{color:var(--text-muted);line-height:1.5;}.sr-out{color:var(--text-muted);line-height:1.5;font-style:italic;}</style>
+    <div class="sr-row"><div class="sr-cad" style="color:var(--brand-teal);">Daily</div><div class="sr-act">Monitor activation & usage dashboards in QuickSight; flag anomalies; respond to Development questions on open requirements</div><div class="sr-out">Anomaly alerts; ad-hoc requirement clarifications</div></div>
+    <div class="sr-row"><div class="sr-cad" style="color:var(--brand-gold);">Weekly</div><div class="sr-act">Flow analysis session (one department per week); backlog grooming with Development; Intelligence Brief preparation</div><div class="sr-out">Weekly Intelligence Brief; updated prioritized backlog</div></div>
+    <div class="sr-row"><div class="sr-cad" style="color:var(--brand-gold);">Weekly</div><div class="sr-act">Product Intelligence → Development sync (30 min). Review in-flight builds, unblock requirements questions, accept/reject completed items</div><div class="sr-out">QA sign-off decisions; sprint direction for Development</div></div>
+    <div class="sr-row"><div class="sr-cad" style="color:var(--brand-green);">Monthly</div><div class="sr-act">Full measurement review: leading & lagging indicator analysis, ROI quantification, opportunity pipeline refresh</div><div class="sr-out">Monthly Impact Report; updated opportunity scoring matrix</div></div>
+    <div class="sr-row"><div class="sr-cad" style="color:var(--brand-green);">Monthly</div><div class="sr-act">Present Product Intelligence findings at ELT Business Review. Recommend go/no-go on next rollout wave.</div><div class="sr-out">ELT Business Review input deck; wave gating recommendation</div></div>
+  </div>
+
+</div>
+
+<!-- ===================== TAB: INTEGRATION PLAN ===================== -->
+<div id="tab-integration" class="tab-panel">
+<style>
+  .cons-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px; }
+  .cons-card { background:var(--surface2); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+  .cons-card-head { padding:12px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); }
+  .cons-card-icon { font-size:18px; }
+  .cons-card-title { font-size:13px; font-weight:700; }
+  .cons-card-body { padding:12px 16px; font-size:12px; color:var(--text-muted); line-height:1.7; }
+  .cons-card-body li { margin-bottom:4px; }
+
+  .dept-table { width:100%; border-collapse:collapse; font-size:12px; background:var(--surface2); border-radius:10px; overflow:hidden; margin-bottom:28px; }
+  .dept-table th { background:var(--surface3); padding:9px 12px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); font-weight:600; }
+  .dept-table td { padding:9px 12px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:top; }
+  .dept-table tr:last-child td { border-bottom:none; }
+  .dept-name { font-weight:700; color:var(--text); font-size:12px; }
+  .tool-chip { display:inline-block; font-size:10px; padding:2px 7px; border-radius:10px; margin:2px 2px 2px 0; font-weight:500; }
+  .tc-m365 { background:rgba(0,120,212,0.15); color:#60a5fa; border:1px solid rgba(0,120,212,0.3); }
+  .tc-sf { background:rgba(0,161,224,0.1); color:#38bdf8; border:1px solid rgba(0,161,224,0.25); }
+  .tc-aws { background:rgba(255,153,0,0.1); color:#ff9900; border:1px solid rgba(255,153,0,0.25); }
+  .tc-snow { background:rgba(0,160,90,0.12); color:#4ade80; border:1px solid rgba(0,160,90,0.25); }
+  .tc-work { background:rgba(255,102,0,0.1); color:#fb923c; border:1px solid rgba(255,102,0,0.25); }
+  .tc-jira { background:rgba(0,82,204,0.15); color:#93c5fd; border:1px solid rgba(0,82,204,0.3); }
+  .tc-sap { background:rgba(0,150,57,0.12); color:#86efac; border:1px solid rgba(0,150,57,0.25); }
+  .tc-custom { background:rgba(139,92,246,0.12); color:#c4b5fd; border:1px solid rgba(139,92,246,0.25); }
+  .priority-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; }
+  .p-high { background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); }
+  .p-med { background:rgba(244,162,10,0.15); color:var(--brand-gold); border:1px solid rgba(244,162,10,0.3); }
+  .p-low { background:rgba(34,197,94,0.1); color:var(--brand-green); border:1px solid rgba(34,197,94,0.25); }
+  .qs-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px; }
+  .cw-dot { width:8px; height:8px; border-radius:50%; background:var(--brand-teal); display:inline-block; margin-right:4px; }
+
+  /* TIMELINE */
+  .timeline-wrap { background:var(--surface2); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:28px; }
+  .tl-header { display:grid; grid-template-columns:160px repeat(8,1fr); background:var(--surface3); }
+  .tl-h-cell { padding:8px 6px; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600; text-align:center; border-left:1px solid var(--border); }
+  .tl-h-cell:first-child { border-left:none; text-align:left; padding-left:12px; }
+  .tl-row-g { display:grid; grid-template-columns:160px repeat(8,1fr); border-bottom:1px solid rgba(255,255,255,0.04); align-items:center; min-height:36px; }
+  .tl-row-g:last-child { border-bottom:none; }
+  .tl-label { padding:8px 12px; font-size:11px; font-weight:600; color:var(--text-muted); }
+  .tl-cell { border-left:1px solid rgba(255,255,255,0.04); height:100%; display:flex; align-items:center; justify-content:center; padding:4px; }
+  .tl-bar { border-radius:3px; height:18px; width:90%; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:600; color:rgba(255,255,255,0.9); }
+  .tl-phase-label { font-size:10px; font-weight:700; color:var(--text-muted); padding:6px 12px; background:var(--surface3); border-bottom:1px solid rgba(255,255,255,0.05); }
+
+  /* ACTION ITEMS */
+  .action-phase { margin-bottom:24px; }
+  .action-phase-title { font-size:13px; font-weight:700; padding:10px 16px; border-radius:8px 8px 0 0; display:flex; align-items:center; gap:10px; }
+  .action-items-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; background:var(--surface2); border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; overflow:hidden; }
+  .action-item { padding:10px 16px; border-bottom:1px solid rgba(255,255,255,0.04); border-right:1px solid rgba(255,255,255,0.04); display:flex; gap:10px; align-items:flex-start; font-size:12px; }
+  .action-item:nth-child(even) { border-right:none; }
+  .action-item:nth-last-child(-n+2) { border-bottom:none; }
+  .ai-check { width:16px; height:16px; border-radius:3px; border:2px solid; flex-shrink:0; margin-top:1px; }
+  .ai-text { color:var(--text-muted); line-height:1.5; }
+  .ai-text strong { color:var(--text); }
+  .ai-owner { font-size:10px; color:var(--text-muted); margin-top:3px; }
+  .ai-tag { font-size:10px; padding:1px 6px; border-radius:8px; font-weight:600; margin-left:6px; }
+</style>
+
+  <div class="section-header">
+    <h2>Department Integration Plan — Claude Cowork & Amazon QuickSight</h2>
+    <span class="pill pill-teal">Cross-Enterprise Connectivity</span>
+  </div>
+
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:28px;font-size:13px;color:var(--text-muted);line-height:1.6;">
+    Integrating Claude Cowork and Amazon QuickSight with each department's existing tools is what unlocks compound value — it turns both platforms from standalone apps into an interconnected AI fabric across EchoStar. This plan covers the key considerations, department-by-department tool mapping, and a phased 6-month action timeline.
+  </div>
+
+  <!-- CONSIDERATIONS -->
+  <div class="section-header"><h2>Integration Considerations</h2><span class="pill pill-gold">Must Address Before Connecting</span></div>
+  <div class="cons-grid">
+
+    <div class="cons-card">
+      <div class="cons-card-head" style="background:rgba(239,68,68,0.08);border-bottom-color:rgba(239,68,68,0.2);">
+        <span class="cons-card-icon">🔐</span>
+        <span class="cons-card-title" style="color:#f87171;">Security & Compliance</span>
+      </div>
+      <div class="cons-card-body">
+        <ul style="list-style:none;padding:0;margin:0;">
+          <li>• SOC 2 Type II review for Anthropic (Claude) and AWS QuickSight before enterprise connector approval</li>
+          <li>• ITAR/export control assessment — satellite operations data may be restricted</li>
+          <li>• FedRAMP consideration for any government contract data</li>
+          <li>• Data Loss Prevention (DLP) policies: block PII, CPNI, and classified data from reaching AI models</li>
+          <li>• Audit logging required for all AI-tool interactions (who asked what, when)</li>
+          <li>• Penetration testing of connector endpoints before production go-live</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cons-card">
+      <div class="cons-card-head" style="background:rgba(26,107,181,0.1);border-bottom-color:rgba(26,107,181,0.25);">
+        <span class="cons-card-icon">🪪</span>
+        <span class="cons-card-title" style="color:var(--brand-light);">Identity & Access</span>
+      </div>
+      <div class="cons-card-body">
+        <ul style="list-style:none;padding:0;margin:0;">
+          <li>• SSO via Azure AD / Okta for both platforms — no standalone credentials</li>
+          <li>• OAuth 2.0 per-user connector authorization (Cowork: each user authorizes their own connections)</li>
+          <li>• Least-privilege access: QuickSight IAM roles scoped to department data only</li>
+          <li>• Row-level security (RLS) in QuickSight — Finance sees Finance data, not HR compensation data</li>
+          <li>• Service accounts for automated Agent tasks — separate from user accounts, auditable</li>
+          <li>• Access revocation workflow: auto-deprovision on employee departure</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cons-card">
+      <div class="cons-card-head" style="background:rgba(244,162,10,0.08);border-bottom-color:rgba(244,162,10,0.2);">
+        <span class="cons-card-icon">🗄️</span>
+        <span class="cons-card-title" style="color:var(--brand-gold);">Data Governance</span>
+      </div>
+      <div class="cons-card-body">
+        <ul style="list-style:none;padding:0;margin:0;">
+          <li>• Data classification audit first: tag all enterprise data as Public / Internal / Confidential / Restricted before AI can access it</li>
+          <li>• Define which data tiers Claude can read, summarize, or act on</li>
+          <li>• QuickSight data catalog: every dataset must have an owner, refresh schedule, and sensitivity label</li>
+          <li>• Data residency: confirm AWS region (us-east-1 / us-west-2) aligns with EchoStar data policies</li>
+          <li>• Retention policy alignment: AI conversation logs + QuickSight query history</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cons-card">
+      <div class="cons-card-head" style="background:rgba(34,197,94,0.08);border-bottom-color:rgba(34,197,94,0.2);">
+        <span class="cons-card-icon">🏗️</span>
+        <span class="cons-card-title" style="color:var(--brand-green);">Technical Architecture</span>
+      </div>
+      <div class="cons-card-body">
+        <ul style="list-style:none;padding:0;margin:0;">
+          <li>• VPC endpoints for QuickSight → private data sources (no public internet traversal for sensitive data)</li>
+          <li>• API rate limit planning per connector (M365, Salesforce, ServiceNow all have throttling)</li>
+          <li>• SPICE capacity planning for QuickSight — pre-calculate dataset sizes across all departments</li>
+          <li>• Network proxy / firewall rules: Cowork desktop app needs outbound HTTPS to Claude API</li>
+          <li>• Data refresh cadence design: real-time vs. hourly vs. daily by dataset priority</li>
+          <li>• Fallback/degraded-mode behavior when connectors are unavailable</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cons-card">
+      <div class="cons-card-head" style="background:rgba(0,180,216,0.08);border-bottom-color:rgba(0,180,216,0.2);">
+        <span class="cons-card-icon">📋</span>
+        <span class="cons-card-title" style="color:var(--brand-teal);">IT Governance & Procurement</span>
+      </div>
+      <div class="cons-card-body">
+        <ul style="list-style:none;padding:0;margin:0;">
+          <li>• IT Security review and approval required for each new connector type (Salesforce, ServiceNow, etc.)</li>
+          <li>• Third-party vendor risk assessment for each SaaS tool being connected</li>
+          <li>• Legal: Data Processing Agreements (DPAs) with Anthropic and AWS must be signed</li>
+          <li>• IT change management: connector additions go through change advisory board (CAB)</li>
+          <li>• Approved connector registry: IT publishes list of pre-approved connections; custom requests require additional review</li>
+          <li>• Budget approval for SPICE capacity expansion and any premium connector licensing</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cons-card">
+      <div class="cons-card-head" style="background:rgba(139,92,246,0.1);border-bottom-color:rgba(139,92,246,0.2);">
+        <span class="cons-card-icon">🔄</span>
+        <span class="cons-card-title" style="color:#c4b5fd;">Change Management</span>
+      </div>
+      <div class="cons-card-body">
+        <ul style="list-style:none;padding:0;margin:0;">
+          <li>• Department IT liaisons required for each integration wave — not just central IT</li>
+          <li>• Data owner sign-off before any departmental dataset is connected to QuickSight or Cowork</li>
+          <li>• User communication: what data Claude can see vs. what it cannot (important for trust)</li>
+          <li>• Connector onboarding guide per department — how to authorize, what's connected, how to revoke</li>
+          <li>• Escalation path for integration failures or unexpected AI behavior on connected data</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- DEPARTMENT TOOL MAPPING -->
+  <div class="section-header"><h2>Department Tool Mapping</h2><span class="pill pill-blue">QuickSight Data Sources + Cowork Connectors</span></div>
+  <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+    <span style="margin-right:16px;"><span class="qs-dot" style="background:#ff9900;"></span>QuickSight data source</span>
+    <span style="margin-right:16px;"><span class="cw-dot"></span>Cowork connector</span>
+    <span style="margin-right:16px;"><span class="priority-badge p-high">High</span> Priority for Wave 1</span>
+    <span><span class="priority-badge p-med">Med</span> Wave 2</span>
+    <span style="margin-left:16px;"><span class="priority-badge p-low">Wave 3</span></span>
+  </div>
+  <table class="dept-table">
+    <thead><tr>
+      <th style="width:130px;">Department</th>
+      <th>Existing Tools</th>
+      <th>QuickSight Data Sources</th>
+      <th>Cowork Connectors</th>
+      <th style="width:80px;">Priority</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><div class="dept-name">🛰 Network / Satellite Ops</div></td>
+        <td>
+          <span class="tool-chip tc-snow">ServiceNow</span>
+          <span class="tool-chip tc-custom">OSS/BSS</span>
+          <span class="tool-chip tc-custom">NMS</span>
+          <span class="tool-chip tc-m365">M365</span>
+          <span class="tool-chip tc-aws">AWS CloudWatch</span>
+        </td>
+        <td style="color:var(--text-muted);font-size:11px;">
+          <span class="qs-dot" style="background:#ff9900;"></span>ServiceNow (ticket/incident data)<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>AWS CloudWatch metrics → S3 → QS<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>Custom OSS/BSS via JDBC connector<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>AWS IoT / telemetry data in S3
+        </td>
+        <td style="font-size:11px;color:var(--text-muted);">
+          <span class="cw-dot"></span>M365 (Outlook, Teams, SharePoint)<br>
+          <span class="cw-dot"></span>ServiceNow (read incidents)<br>
+          <span class="cw-dot"></span>File system / ops runbooks
+        </td>
+        <td><span class="priority-badge p-high">High</span></td>
+      </tr>
+      <tr>
+        <td><div class="dept-name">💻 Engineering / IT</div></td>
+        <td>
+          <span class="tool-chip tc-jira">Jira</span>
+          <span class="tool-chip tc-jira">Confluence</span>
+          <span class="tool-chip tc-custom">GitHub</span>
+          <span class="tool-chip tc-aws">AWS</span>
+          <span class="tool-chip tc-snow">ServiceNow</span>
+          <span class="tool-chip tc-m365">M365</span>
+        </td>
+        <td style="color:var(--text-muted);font-size:11px;">
+          <span class="qs-dot" style="background:#ff9900;"></span>Jira via REST API → S3 → QS (sprint/backlog metrics)<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>GitHub via API → deployment frequency, cycle time<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>AWS Cost Explorer → cost by team<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>ServiceNow → ITSM metrics
+        </td>
+        <td style="font-size:11px;color:var(--text-muted);">
+          <span class="cw-dot"></span>Jira / Atlassian (tickets, sprints)<br>
+          <span class="cw-dot"></span>GitHub (PRs, issues)<br>
+          <span class="cw-dot"></span>M365 + Confluence (docs/wikis)<br>
+          <span class="cw-dot"></span>AWS (read-only ops access)
+        </td>
+        <td><span class="priority-badge p-high">High</span></td>
+      </tr>
+      <tr>
+        <td><div class="dept-name">💰 Finance</div></td>
+        <td>
+          <span class="tool-chip tc-sap">SAP / Oracle</span>
+          <span class="tool-chip tc-m365">M365 Excel</span>
+          <span class="tool-chip tc-custom">Concur</span>
+          <span class="tool-chip tc-work">Workday</span>
+        </td>
+        <td style="color:var(--text-muted);font-size:11px;">
+          <span class="qs-dot" style="background:#ff9900;"></span>SAP/Oracle ERP → Redshift → QS (P&L, budgets)<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>Workday → headcount & payroll data<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>Concur → T&E spend<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>S3 data lake (Excel uploads → Glue → QS)
+        </td>
+        <td style="font-size:11px;color:var(--text-muted);">
+          <span class="cw-dot"></span>M365 (Outlook, Excel, SharePoint)<br>
+          <span class="cw-dot"></span>Workday (read-only HR/finance data)<br>
+          <span style="font-size:11px;color:#f87171;">⚠ SAP/Oracle: custom connector needed</span>
+        </td>
+        <td><span class="priority-badge p-high">High</span></td>
+      </tr>
+      <tr>
+        <td><div class="dept-name">👥 HR / People</div></td>
+        <td>
+          <span class="tool-chip tc-work">Workday</span>
+          <span class="tool-chip tc-custom">LMS</span>
+          <span class="tool-chip tc-m365">M365</span>
+          <span class="tool-chip tc-custom">LinkedIn Recruiter</span>
+        </td>
+        <td style="color:var(--text-muted);font-size:11px;">
+          <span class="qs-dot" style="background:#ff9900;"></span>Workday → headcount, turnover, compensation bands<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>LMS → AI training completion & certification rates<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>Qualtrics / survey tool → employee NPS data<br>
+          <em style="color:#f87171;">Note: strict RLS required — compensation data is Restricted</em>
+        </td>
+        <td style="font-size:11px;color:var(--text-muted);">
+          <span class="cw-dot"></span>M365 (Outlook, SharePoint for HR docs)<br>
+          <span class="cw-dot"></span>Workday (read: org charts, open roles)<br>
+          <span style="font-size:11px;color:#f87171;">⚠ No compensation/PII data in Cowork</span>
+        </td>
+        <td><span class="priority-badge p-med">Med</span></td>
+      </tr>
+      <tr>
+        <td><div class="dept-name">📈 Sales / BD</div></td>
+        <td>
+          <span class="tool-chip tc-sf">Salesforce</span>
+          <span class="tool-chip tc-m365">M365</span>
+          <span class="tool-chip tc-custom">DocuSign</span>
+          <span class="tool-chip tc-custom">LinkedIn SN</span>
+        </td>
+        <td style="color:var(--text-muted);font-size:11px;">
+          <span class="qs-dot" style="background:#ff9900;"></span>Salesforce → pipeline, win rates, revenue by region<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>DocuSign → contract cycle time metrics<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>QuickSight native Salesforce connector (no ETL needed)
+        </td>
+        <td style="font-size:11px;color:var(--text-muted);">
+          <span class="cw-dot"></span>Salesforce (read/log activities)<br>
+          <span class="cw-dot"></span>M365 (email research, proposal drafting)<br>
+          <span class="cw-dot"></span>LinkedIn Sales Navigator (research)<br>
+          <span class="cw-dot"></span>DocuSign (contract status)
+        </td>
+        <td><span class="priority-badge p-high">High</span></td>
+      </tr>
+      <tr>
+        <td><div class="dept-name">🎧 Customer Support</div></td>
+        <td>
+          <span class="tool-chip tc-snow">ServiceNow</span>
+          <span class="tool-chip tc-sf">Salesforce SC</span>
+          <span class="tool-chip tc-m365">M365</span>
+          <span class="tool-chip tc-custom">Call Center</span>
+        </td>
+        <td style="color:var(--text-muted);font-size:11px;">
+          <span class="qs-dot" style="background:#ff9900;"></span>ServiceNow → ticket volume, MTTR, SLA adherence<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>Salesforce Service Cloud → CSAT, case resolution<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>Call center data → handle time, first-call resolution
+        </td>
+        <td style="font-size:11px;color:var(--text-muted);">
+          <span class="cw-dot"></span>ServiceNow (read/create tickets)<br>
+          <span class="cw-dot"></span>Salesforce (case lookup, account history)<br>
+          <span class="cw-dot"></span>M365 (customer comms drafting)
+        </td>
+        <td><span class="priority-badge p-high">High</span></td>
+      </tr>
+      <tr>
+        <td><div class="dept-name">⚖️ Legal / Compliance</div></td>
+        <td>
+          <span class="tool-chip tc-custom">DocuSign CLM</span>
+          <span class="tool-chip tc-m365">SharePoint</span>
+          <span class="tool-chip tc-custom">GRC Tool</span>
+        </td>
+        <td style="color:var(--text-muted);font-size:11px;">
+          <span class="qs-dot" style="background:#ff9900;"></span>Contract management → contract lifecycle metrics<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>GRC tool → compliance posture dashboards<br>
+          <em style="color:#f87171;">⚠ Legal docs are Restricted — review DLP policy before connecting</em>
+        </td>
+        <td style="font-size:11px;color:var(--text-muted);">
+          <span class="cw-dot"></span>SharePoint (contract/policy doc research)<br>
+          <span class="cw-dot"></span>M365 (Outlook for comms)<br>
+          <span style="font-size:11px;color:#f87171;">⚠ Legal approval required before any contract data flows to Claude</span>
+        </td>
+        <td><span class="priority-badge p-low">Wave 3</span></td>
+      </tr>
+      <tr>
+        <td><div class="dept-name">📣 Marketing</div></td>
+        <td>
+          <span class="tool-chip tc-custom">HubSpot</span>
+          <span class="tool-chip tc-m365">M365</span>
+          <span class="tool-chip tc-custom">CMS / Web</span>
+          <span class="tool-chip tc-sf">Salesforce</span>
+        </td>
+        <td style="color:var(--text-muted);font-size:11px;">
+          <span class="qs-dot" style="background:#ff9900;"></span>HubSpot → campaign performance, MQL/SQL pipeline<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>Web analytics (GA4 → S3 → QS)<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>Salesforce → marketing-sourced revenue attribution
+        </td>
+        <td style="font-size:11px;color:var(--text-muted);">
+          <span class="cw-dot"></span>HubSpot (campaign data, contact lists)<br>
+          <span class="cw-dot"></span>M365 (content drafting, email comms)<br>
+          <span class="cw-dot"></span>Web search (competitive research)
+        </td>
+        <td><span class="priority-badge p-med">Med</span></td>
+      </tr>
+      <tr>
+        <td><div class="dept-name">🔬 Product / PMO</div></td>
+        <td>
+          <span class="tool-chip tc-jira">Jira</span>
+          <span class="tool-chip tc-jira">Confluence</span>
+          <span class="tool-chip tc-m365">M365</span>
+          <span class="tool-chip tc-custom">Aha! / PB</span>
+        </td>
+        <td style="color:var(--text-muted);font-size:11px;">
+          <span class="qs-dot" style="background:#ff9900;"></span>Jira → feature delivery velocity, release metrics<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>AI rollout metrics (LMS + Cowork + QS adoption)<br>
+          <span class="qs-dot" style="background:#ff9900;"></span>Roadmap data (manual uploads via S3)
+        </td>
+        <td style="font-size:11px;color:var(--text-muted);">
+          <span class="cw-dot"></span>Jira + Confluence (backlog, specs, wikis)<br>
+          <span class="cw-dot"></span>M365 (stakeholder comms, deck creation)<br>
+          <span class="cw-dot"></span>All adoption platform data (key for Sharath)
+        </td>
+        <td><span class="priority-badge p-high">High</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- TIMELINE -->
+  <div class="section-header"><h2>Integration Timeline</h2><span class="pill pill-teal">6-Month Phased Plan</span></div>
+  <div class="timeline-wrap">
+    <div class="tl-header">
+      <div class="tl-h-cell">Track</div>
+      <div class="tl-h-cell">Wk 1–2</div>
+      <div class="tl-h-cell">Wk 3–4</div>
+      <div class="tl-h-cell">Mo 2</div>
+      <div class="tl-h-cell">Mo 3</div>
+      <div class="tl-h-cell">Mo 4</div>
+      <div class="tl-h-cell">Mo 5</div>
+      <div class="tl-h-cell">Mo 6</div>
+      <div class="tl-h-cell">Mo 6+</div>
+    </div>
+
+    <div class="tl-phase-label">🔴 Phase 0 — Foundation & Governance</div>
+    <div class="tl-row-g">
+      <div class="tl-label">Security review</div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#ef4444;">SOC2 / DPA review</div></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#ef4444;">Legal sign-off</div></div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+    </div>
+    <div class="tl-row-g">
+      <div class="tl-label">Data classification</div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#ef4444;">Audit & tagging</div></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#ef4444;">Policy publish</div></div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+    </div>
+    <div class="tl-row-g">
+      <div class="tl-label">SSO & IAM setup</div>
+      <div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#ef4444;">Azure AD / Okta</div></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#ef4444;">QS IAM roles</div></div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+    </div>
+
+    <div class="tl-phase-label">🟠 Phase 1 — Enterprise-Wide Core Connectors</div>
+    <div class="tl-row-g">
+      <div class="tl-label">M365 connector</div>
+      <div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#f97316;">Pilot 10 users</div></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#f97316;">All-hands rollout</div></div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+    </div>
+    <div class="tl-row-g">
+      <div class="tl-label">QS core data lake</div>
+      <div class="tl-cell"></div>
+      <div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#f97316;">S3 + Glue + Athena</div></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#f97316;">Redshift cluster</div></div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+    </div>
+    <div class="tl-row-g">
+      <div class="tl-label">QS row-level security</div>
+      <div class="tl-cell"></div>
+      <div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#f97316;">RLS design</div></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#f97316;">Deploy + test</div></div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+    </div>
+
+    <div class="tl-phase-label">🟡 Phase 2 — High-Priority Department Integrations</div>
+    <div class="tl-row-g">
+      <div class="tl-label">Salesforce → QS + CW</div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#eab308;">QS native connector</div></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#eab308;">Cowork OAuth</div></div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+    </div>
+    <div class="tl-row-g">
+      <div class="tl-label">ServiceNow → QS + CW</div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#eab308;">API → S3 pipeline</div></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#eab308;">Cowork connector</div></div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+    </div>
+    <div class="tl-row-g">
+      <div class="tl-label">Jira → QS (Eng/Product)</div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#eab308;">REST API → S3</div></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#eab308;">QS dashboard</div></div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+    </div>
+    <div class="tl-row-g">
+      <div class="tl-label">ERP (SAP/Oracle) → QS</div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#eab308;">JDBC / ETL design</div></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#eab308;">Finance dashboards</div></div>
+      <div class="tl-cell"></div><div class="tl-cell"></div>
+    </div>
+
+    <div class="tl-phase-label">🟢 Phase 3 — Wave 2 Departments + Agent Automation</div>
+    <div class="tl-row-g">
+      <div class="tl-label">HR / Workday → QS</div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#22c55e;">Workday connector</div></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#22c55e;">HR dashboards</div></div>
+      <div class="tl-cell"></div>
+    </div>
+    <div class="tl-row-g">
+      <div class="tl-label">Marketing (HubSpot)</div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#22c55e;">HubSpot → QS + CW</div></div>
+      <div class="tl-cell"></div><div class="tl-cell"></div>
+    </div>
+    <div class="tl-row-g">
+      <div class="tl-label">First Agents deployed</div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#22c55e;">Dev Lane ships v1</div></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#22c55e;">QA + deploy</div></div>
+      <div class="tl-cell"></div>
+    </div>
+    <div class="tl-row-g">
+      <div class="tl-label">Legal / Compliance</div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#22c55e;">Legal-approved scope</div></div>
+      <div class="tl-cell"></div>
+    </div>
+    <div class="tl-row-g">
+      <div class="tl-label">Advanced automation</div>
+      <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+      <div class="tl-cell"><div class="tl-bar" style="background:#22c55e;">Cross-system Agents</div></div>
+    </div>
+  </div>
+
+  <!-- ACTION ITEMS -->
+  <div class="section-header"><h2>Action Items by Phase</h2><span class="pill pill-teal">Owner · Due Date</span></div>
+
+  <div class="action-phase">
+    <div class="action-phase-title" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);border-radius:8px 8px 0 0;">
+      🔴 Phase 0 — Foundation & Governance &nbsp;<span style="font-size:11px;color:var(--text-muted);">Weeks 1–4 · Must complete before any connector goes live</span>
+    </div>
+    <div class="action-items-grid" style="border-color:rgba(239,68,68,0.15);">
+      <div class="action-item"><div class="ai-check" style="border-color:#f87171;"></div><div><div class="ai-text"><strong>Anthropic SOC2 + DPA review</strong> — Legal and IT Security review Anthropic's SOC2 Type II report and execute the Data Processing Agreement covering Claude/Cowork.</div><div class="ai-owner">Owner: Legal + IT Security &nbsp;|&nbsp; Due: Week 2</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#f87171;"></div><div><div class="ai-text"><strong>AWS QuickSight BAA / DPA</strong> — Execute Business Associate Agreement (if HIPAA-adjacent data) and DPA with AWS. Confirm data residency region.</div><div class="ai-owner">Owner: Legal + Procurement &nbsp;|&nbsp; Due: Week 2</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#f87171;"></div><div><div class="ai-text"><strong>Enterprise data classification audit</strong> — Tag all enterprise datasets as Public / Internal / Confidential / Restricted. Publish classification policy. This gates which data can flow to AI.</div><div class="ai-owner">Owner: IT Security + Data Owners &nbsp;|&nbsp; Due: Week 3</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#f87171;"></div><div><div class="ai-text"><strong>ITAR / FedRAMP scoping</strong> — Identify which datasets touch government contracts or satellite defense operations. Exclude from AI connectors until separately reviewed.</div><div class="ai-owner">Owner: Legal + Compliance &nbsp;|&nbsp; Due: Week 2</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#f87171;"></div><div><div class="ai-text"><strong>DLP policy design for Cowork</strong> — Define what data Claude must never process (SSNs, CPNI, classified). Configure network-level DLP or prompt-level guardrails.</div><div class="ai-owner">Owner: IT Security &nbsp;|&nbsp; Due: Week 3</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#f87171;"></div><div><div class="ai-text"><strong>Approved connector registry</strong> — IT publishes the list of pre-approved connectors for Cowork (M365 approved; Salesforce approved pending review; SAP custom-only). No unapproved connectors.</div><div class="ai-owner">Owner: IT Governance &nbsp;|&nbsp; Due: Week 4</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#f87171;"></div><div><div class="ai-text"><strong>Network / firewall clearance for Cowork</strong> — Ensure outbound HTTPS from corporate endpoints to Claude API (api.anthropic.com) is whitelisted. Test from both on-prem and VPN.</div><div class="ai-owner">Owner: IT Networking &nbsp;|&nbsp; Due: Week 2</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#f87171;"></div><div><div class="ai-text"><strong>Designate department data owners</strong> — Each department assigns a data owner who must approve before their data is connected to QuickSight or accessible via Cowork connectors.</div><div class="ai-owner">Owner: AI Exec Sponsor &nbsp;|&nbsp; Due: Week 2</div></div></div>
+    </div>
+  </div>
+
+  <div class="action-phase">
+    <div class="action-phase-title" style="background:rgba(249,115,22,0.1);color:#fb923c;border:1px solid rgba(249,115,22,0.2);border-radius:8px 8px 0 0;">
+      🟠 Phase 1 — Core Infrastructure &nbsp;<span style="font-size:11px;color:var(--text-muted);">Weeks 3–8 · Enterprise-wide foundation</span>
+    </div>
+    <div class="action-items-grid" style="border-color:rgba(249,115,22,0.15);">
+      <div class="action-item"><div class="ai-check" style="border-color:#fb923c;"></div><div><div class="ai-text"><strong>Azure AD / Okta SSO for Cowork</strong> — Configure SSO so all employees authenticate via corporate identity. No standalone Cowork credentials.</div><div class="ai-owner">Owner: IT Identity &nbsp;|&nbsp; Due: Week 4</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#fb923c;"></div><div><div class="ai-text"><strong>QuickSight SSO + IAM role structure</strong> — Set up IAM roles: Admin / Author / Reader. Map to Azure AD groups by department. Enable reader-level provisioning for all 8k–12k users.</div><div class="ai-owner">Owner: IT / AWS Admin &nbsp;|&nbsp; Due: Week 5</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#fb923c;"></div><div><div class="ai-text"><strong>M365 connector rollout (Cowork)</strong> — Deploy Microsoft 365 connector (Outlook, Teams, SharePoint, OneDrive) to all Cowork users. Run pilot with 20 users in weeks 3–4, then all-hands weeks 5–6.</div><div class="ai-owner">Owner: IT + Change Mgmt &nbsp;|&nbsp; Due: Week 6</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#fb923c;"></div><div><div class="ai-text"><strong>AWS data lake foundation</strong> — Provision S3 buckets, AWS Glue catalog, and Athena as the core QuickSight data backbone. Define bucket naming, tagging, and lifecycle policies.</div><div class="ai-owner">Owner: IT / AWS Admin &nbsp;|&nbsp; Due: Week 5</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#fb923c;"></div><div><div class="ai-text"><strong>SPICE capacity provisioning</strong> — Estimate dataset sizes across all planned QS connections. Purchase SPICE capacity (or use on-demand) sized for 12k users + all department datasets.</div><div class="ai-owner">Owner: IT + Finance &nbsp;|&nbsp; Due: Week 4</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#fb923c;"></div><div><div class="ai-text"><strong>Row-level security (RLS) framework</strong> — Design and deploy RLS rules in QuickSight. Finance sees Finance data only. HR compensation tagged Restricted. Test with shadow users before go-live.</div><div class="ai-owner">Owner: IT Security + QS Admin &nbsp;|&nbsp; Due: Week 7</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#fb923c;"></div><div><div class="ai-text"><strong>Connector onboarding guide (per department)</strong> — Publish step-by-step guides: how to authorize connectors in Cowork, what's connected, what Claude can see, how to revoke. Include FAQ on data privacy.</div><div class="ai-owner">Owner: Internal Comms + L&D &nbsp;|&nbsp; Due: Week 6</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#fb923c;"></div><div><div class="ai-text"><strong>Audit logging activation</strong> — Enable CloudTrail (QS actions) and Cowork usage logging. Route to centralized SIEM. Define alert thresholds for anomalous access patterns.</div><div class="ai-owner">Owner: IT Security &nbsp;|&nbsp; Due: Week 5</div></div></div>
+    </div>
+  </div>
+
+  <div class="action-phase">
+    <div class="action-phase-title" style="background:rgba(234,179,8,0.1);color:#facc15;border:1px solid rgba(234,179,8,0.2);border-radius:8px 8px 0 0;">
+      🟡 Phase 2 — High-Priority Department Integrations &nbsp;<span style="font-size:11px;color:var(--text-muted);">Months 2–4 · Sales · Ops · Engineering · Finance</span>
+    </div>
+    <div class="action-items-grid" style="border-color:rgba(234,179,8,0.15);">
+      <div class="action-item"><div class="ai-check" style="border-color:#facc15;"></div><div><div class="ai-text"><strong>Salesforce → QuickSight (native connector)</strong> — Connect Salesforce using QS native connector. Bring in Opportunities, Accounts, and Activity objects. Build pipeline & win-rate dashboard for Sales.</div><div class="ai-owner">Owner: IT + Sales Ops &nbsp;|&nbsp; Due: Month 3</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#facc15;"></div><div><div class="ai-text"><strong>Salesforce Cowork connector (Sales users)</strong> — Authorize Salesforce connector in Cowork for all Sales power users. Test read/write (log call notes, update opportunity stages via Claude).</div><div class="ai-owner">Owner: IT + Sales Ops &nbsp;|&nbsp; Due: Month 3</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#facc15;"></div><div><div class="ai-text"><strong>ServiceNow → QuickSight (Ops + Support)</strong> — Build REST API pipeline: ServiceNow → AWS Lambda → S3 → QS. Bring in incident, change, and problem records. Build ticket volume & SLA dashboards.</div><div class="ai-owner">Owner: IT + Ops &nbsp;|&nbsp; Due: Month 3</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#facc15;"></div><div><div class="ai-text"><strong>Jira → QuickSight (Engineering + Product)</strong> — Build Jira REST API → S3 pipeline. Bring in sprint velocity, bug rates, and deployment frequency. Power Product Intelligence dashboards.</div><div class="ai-owner">Owner: IT + Engineering &nbsp;|&nbsp; Due: Month 3</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#facc15;"></div><div><div class="ai-text"><strong>SAP/Oracle ERP → QuickSight (Finance)</strong> — Design JDBC connector or ETL pipeline (ERP → Redshift → QS). Scope: P&L, budget vs. actuals, T&E. Finance data owner sign-off required before connection.</div><div class="ai-owner">Owner: IT + Finance + Data Eng &nbsp;|&nbsp; Due: Month 4</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#facc15;"></div><div><div class="ai-text"><strong>OSS/BSS → QuickSight (Network Ops)</strong> — Connect network management system data. Work with Ops team to define the 5–10 KPIs most critical to surface (uptime, capacity, fault rates). Custom JDBC or S3 export.</div><div class="ai-owner">Owner: IT + Network Ops &nbsp;|&nbsp; Due: Month 4</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#facc15;"></div><div><div class="ai-text"><strong>AI rollout metrics dataset in QS (Product Intelligence)</strong> — Build the AI program adoption dashboard: QuickSight activation, Cowork DAU/WAU, LMS completion, NPS. This is Sharath's primary monitoring dashboard.</div><div class="ai-owner">Owner: Sharath + IT &nbsp;|&nbsp; Due: Month 2</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#facc15;"></div><div><div class="ai-text"><strong>Rate-limit & API quota review</strong> — For each new connector (Salesforce, ServiceNow, Jira): document API rate limits, design backoff strategies, and set monitoring alerts before peak usage hits limits.</div><div class="ai-owner">Owner: IT Engineering &nbsp;|&nbsp; Due: Month 3</div></div></div>
+    </div>
+  </div>
+
+  <div class="action-phase">
+    <div class="action-phase-title" style="background:rgba(34,197,94,0.08);color:#4ade80;border:1px solid rgba(34,197,94,0.2);border-radius:8px 8px 0 0;">
+      🟢 Phase 3 — Wave 2 + Agent Deployment &nbsp;<span style="font-size:11px;color:var(--text-muted);">Months 5–6+ · HR · Marketing · Legal · First Agents</span>
+    </div>
+    <div class="action-items-grid" style="border-color:rgba(34,197,94,0.15);">
+      <div class="action-item"><div class="ai-check" style="border-color:#4ade80;"></div><div><div class="ai-text"><strong>Workday → QuickSight (HR)</strong> — Connect Workday using Workday Report-as-a-Service (RaaS) API. Bring in headcount, turnover, open roles. Apply strict RLS — compensation data excluded from all non-HR views.</div><div class="ai-owner">Owner: IT + HR + Legal &nbsp;|&nbsp; Due: Month 5</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#4ade80;"></div><div><div class="ai-text"><strong>HubSpot → QuickSight + Cowork (Marketing)</strong> — Connect HubSpot via native QS connector for campaign analytics. Authorize HubSpot connector in Cowork for Marketing power users.</div><div class="ai-owner">Owner: IT + Marketing &nbsp;|&nbsp; Due: Month 5</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#4ade80;"></div><div><div class="ai-text"><strong>Legal connector scope definition</strong> — Legal team defines exactly what document types Claude can access (policy docs: yes; active litigation: no; contract drafts: case-by-case). Get written sign-off before connecting SharePoint legal folder.</div><div class="ai-owner">Owner: Legal + IT &nbsp;|&nbsp; Due: Month 5</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#4ade80;"></div><div><div class="ai-text"><strong>First Agent deployment — adoption digest Agent</strong> — Development lane deploys the first automated Agent: weekly AI adoption digest auto-assembled from QS + LMS + survey data and emailed to managers. Sharath QA sign-off required.</div><div class="ai-owner">Owner: Dev Lane + Sharath &nbsp;|&nbsp; Due: Month 5</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#4ade80;"></div><div><div class="ai-text"><strong>Cross-system Agent: ticket spike responder</strong> — Agent monitors QS for support ticket anomalies → triggers Cowork to search Teams/email for context → drafts escalation memo. Demonstrates full QS + Cowork closed-loop integration.</div><div class="ai-owner">Owner: Dev Lane + Support + Sharath &nbsp;|&nbsp; Due: Month 6</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#4ade80;"></div><div><div class="ai-text"><strong>Integration health monitoring dashboard</strong> — Build a QS dashboard tracking connector status, API success rates, data refresh freshness, and SPICE utilization across all integrations. Owned by IT, reviewed weekly.</div><div class="ai-owner">Owner: IT + Sharath &nbsp;|&nbsp; Due: Month 6</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#4ade80;"></div><div><div class="ai-text"><strong>Integration retrospective & optimization sprint</strong> — At Month 6: review all connector performance, data quality issues, user feedback on integrated workflows. Prioritize next 6 months of integration roadmap.</div><div class="ai-owner">Owner: Program Mgr + Sharath &nbsp;|&nbsp; Due: Month 6</div></div></div>
+      <div class="action-item"><div class="ai-check" style="border-color:#4ade80;"></div><div><div class="ai-text"><strong>Employee access revocation automation</strong> — Build automated offboarding: when employee leaves, auto-revoke all Cowork connector authorizations and QS access within 24 hours. Integrate with HR termination workflow in Workday.</div><div class="ai-owner">Owner: IT Identity + HR &nbsp;|&nbsp; Due: Month 6</div></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== TAB: TOOL GUIDE ===================== -->
+<div id="tab-tool-guide" class="tab-panel">
+
+  <div class="section-header">
+    <h2>QuickSight vs. Claude Cowork — Tool Selection Guide</h2>
+    <span class="pill pill-teal">For Power Users</span>
+  </div>
+
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:28px;border-left:4px solid var(--brand-teal);">
+    <div style="font-size:13px;color:var(--text-muted);line-height:1.7;">
+      <strong style="color:var(--text);">The rule of thumb:</strong>
+      &nbsp;QuickSight answers <em style="color:#ff9900;">"What happened and why?"</em>
+      &nbsp;—&nbsp;
+      Cowork answers <em style="color:var(--brand-teal);">"What should I do about it, and can you handle it for me?"</em>
+    </div>
+  </div>
+
+  <!-- POSITIONING SPLIT -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+    <div style="background:rgba(255,153,0,0.08);border:1px solid rgba(255,153,0,0.3);border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(90deg,rgba(255,153,0,0.25),transparent);border-bottom:1px solid rgba(255,153,0,0.2);padding:14px 20px;">
+        <div style="font-size:16px;font-weight:700;color:#ff9900;">📊 Amazon QuickSight</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Enterprise BI & Analytics Platform</div>
+      </div>
+      <div style="padding:16px 20px;">
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Structured, repeatable reporting on known data. Purpose-built for dashboards, data exploration, and sharing insights at scale across 8,000 employees.</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#ff9900;margin-bottom:6px;">Primary question it answers</div>
+        <div style="font-size:13px;font-style:italic;color:var(--text);">"What happened? What does the data show?"</div>
+      </div>
+    </div>
+    <div style="background:rgba(0,180,216,0.08);border:1px solid rgba(0,180,216,0.3);border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(90deg,rgba(0,180,216,0.2),transparent);border-bottom:1px solid rgba(0,180,216,0.2);padding:14px 20px;">
+        <div style="font-size:16px;font-weight:700;color:var(--brand-teal);">🤖 Claude Cowork</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Intelligent Task Automation Platform</div>
+      </div>
+      <div style="padding:16px 20px;">
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Unstructured, multi-step work across applications. Purpose-built for power users who need to <em>execute on insights</em> — not just visualize them.</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--brand-teal);margin-bottom:6px;">Primary question it answers</div>
+        <div style="font-size:13px;font-style:italic;color:var(--text);">"What do I need to do? Can you handle this for me?"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USE QS WHEN -->
+  <div class="section-header" style="margin-top:8px;">
+    <h2 style="color:#ff9900;">Use Amazon QuickSight When…</h2>
+  </div>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:28px;">
+    <div style="display:grid;grid-template-columns:1fr 1.4fr 0.8fr;background:var(--surface3);padding:8px 16px;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);font-weight:600;">
+      <div>Use Case</div><div>Example</div><div>Audience</div>
+    </div>
+    <style>
+      .tg-row{display:grid;grid-template-columns:1fr 1.4fr 0.8fr;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;align-items:center;}
+      .tg-row:last-child{border-bottom:none;}
+      .tg-label{color:var(--text);font-weight:500;}
+      .tg-ex{color:var(--text-muted);font-style:italic;}
+      .tg-aud{font-size:11px;color:var(--brand-light);}
+    </style>
+    <div class="tg-row"><div class="tg-label">Answering a recurring business question from data</div><div class="tg-ex">Monthly churn rate, regional sales performance, headcount by BU</div><div class="tg-aud">All employees</div></div>
+    <div class="tg-row"><div class="tg-label">Building a team-wide self-service dashboard</div><div class="tg-ex">Network uptime dashboard for operations managers</div><div class="tg-aud">Analysts, managers</div></div>
+    <div class="tg-row"><div class="tg-label">Replacing a manual Excel report with live visualization</div><div class="tg-ex">Automating a weekly Excel report into a live QuickSight dashboard</div><div class="tg-aud">Ops, Finance, HR</div></div>
+    <div class="tg-row"><div class="tg-label">Exploring structured datasets for patterns or anomalies</div><div class="tg-ex">Filtering satellite service usage data by region and time period</div><div class="tg-aud">Analysts, data teams</div></div>
+    <div class="tg-row"><div class="tg-label">Sharing data-driven insights with leadership</div><div class="tg-ex">Presenting subscriber growth trends in a QBR</div><div class="tg-aud">Any role presenting data</div></div>
+    <div class="tg-row"><div class="tg-label">Natural language data queries (QuickSight Q)</div><div class="tg-ex">Typing "Show me revenue by market in Q2" into the Q interface</div><div class="tg-aud">Non-technical users</div></div>
+    <div class="tg-row"><div class="tg-label">Monitoring KPIs with automated alerts</div><div class="tg-ex">Alert when support ticket volume exceeds 500/day</div><div class="tg-aud">Operations, Support</div></div>
+  </div>
+
+  <!-- USE COWORK WHEN — highlighted section -->
+  <div class="section-header">
+    <h2 style="color:var(--brand-teal);">Use Claude Cowork When… (Power Users)</h2>
+    <span class="pill pill-teal">Primary Power User Tool</span>
+  </div>
+  <div style="background:var(--surface2);border:1px solid rgba(0,180,216,0.3);border-radius:12px;overflow:hidden;margin-bottom:28px;">
+
+    <!-- CATEGORY: DOCUMENT & CONTENT -->
+    <div style="background:rgba(0,180,216,0.12);padding:8px 16px;border-bottom:1px solid rgba(0,180,216,0.2);">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand-teal);">📝 Document & Content Creation</span>
+    </div>
+    <div style="display:grid;grid-template-columns:140px 1fr 1.4fr;background:var(--surface3);padding:6px 16px;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);font-weight:600;">
+      <div>Work Type</div><div>Use Case</div><div>Power User Example</div>
+    </div>
+    <div class="tg-row" style="grid-template-columns:140px 1fr 1.4fr;"><div style="color:var(--brand-teal);font-weight:600;font-size:12px;">Drafting & Writing</div><div class="tg-label" style="font-size:12px;">Reports, proposals, memos, client comms, SOWs, job descriptions, policy docs</div><div class="tg-ex">Draft a vendor escalation memo using data pulled from your email thread and the relevant contract in SharePoint</div></div>
+    <div class="tg-row" style="grid-template-columns:140px 1fr 1.4fr;"><div style="color:var(--brand-teal);font-weight:600;font-size:12px;">Content Synthesis</div><div class="tg-label" style="font-size:12px;">Summarize meeting transcripts, contracts, research, or large document sets into actionable briefs</div><div class="tg-ex">Summarize last quarter's 12 project status reports into a single exec update with key risks surfaced</div></div>
+    <div class="tg-row" style="grid-template-columns:140px 1fr 1.4fr;"><div style="color:var(--brand-teal);font-weight:600;font-size:12px;">Template Population</div><div class="tg-label" style="font-size:12px;">Pull data from email, SharePoint, and CRM to auto-populate standard templates</div><div class="tg-ex">Generate a weekly status report by pulling Jira tickets, Outlook threads, and SharePoint docs into the standard template</div></div>
+
+    <!-- CATEGORY: WORKFLOW AUTOMATION -->
+    <div style="background:rgba(0,180,216,0.12);padding:8px 16px;border-top:1px solid rgba(0,180,216,0.15);border-bottom:1px solid rgba(0,180,216,0.2);">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand-teal);">⚙️ Workflow Automation & Task Delegation</span>
+    </div>
+    <div class="tg-row" style="grid-template-columns:140px 1fr 1.4fr;"><div style="color:var(--brand-teal);font-weight:600;font-size:12px;">Cross-App Coordination</div><div class="tg-label" style="font-size:12px;">Execute multi-step tasks spanning Outlook, Teams, SharePoint, and other connected tools in a single instruction</div><div class="tg-ex">"Find all emails from this vendor in the last 30 days, summarize open issues, and draft a response with proposed resolutions"</div></div>
+    <div class="tg-row" style="grid-template-columns:140px 1fr 1.4fr;"><div style="color:var(--brand-teal);font-weight:600;font-size:12px;">Scheduled Automation</div><div class="tg-label" style="font-size:12px;">Recurring tasks that run automatically — morning briefings, weekly digests, inbox triage, report generation</div><div class="tg-ex">"Every Monday at 7 AM, pull my calendar, surface open Teams action items, and draft a priority plan for the week"</div></div>
+    <div class="tg-row" style="grid-template-columns:140px 1fr 1.4fr;"><div style="color:var(--brand-teal);font-weight:600;font-size:12px;">File & Folder Ops</div><div class="tg-label" style="font-size:12px;">Organize, rename, convert, merge, or bulk-process files across connected storage</div><div class="tg-ex">Batch-convert all .pptx files in a SharePoint folder to PDF and move them to the client-facing archive</div></div>
+
+    <!-- CATEGORY: RESEARCH & ANALYSIS -->
+    <div style="background:rgba(0,180,216,0.12);padding:8px 16px;border-top:1px solid rgba(0,180,216,0.15);border-bottom:1px solid rgba(0,180,216,0.2);">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand-teal);">🔍 Research & Analysis</span>
+    </div>
+    <div class="tg-row" style="grid-template-columns:140px 1fr 1.4fr;"><div style="color:var(--brand-teal);font-weight:600;font-size:12px;">Web Research</div><div class="tg-label" style="font-size:12px;">Multi-source research, fact-checking, competitive intelligence synthesis</div><div class="tg-ex">Research the top 5 satellite broadband competitors' pricing changes in the last 90 days and produce a comparison brief</div></div>
+    <div class="tg-row" style="grid-template-columns:140px 1fr 1.4fr;"><div style="color:var(--brand-teal);font-weight:600;font-size:12px;">Document Analysis</div><div class="tg-label" style="font-size:12px;">Analyze uploaded contracts, RFPs, policies, or specs for key terms, risks, or required actions</div><div class="tg-ex">Review this 80-page RFP and extract all compliance requirements, evaluation criteria, and submission deadlines</div></div>
+
+    <!-- CATEGORY: PRESENTATIONS & OUTPUTS -->
+    <div style="background:rgba(0,180,216,0.12);padding:8px 16px;border-top:1px solid rgba(0,180,216,0.15);border-bottom:1px solid rgba(0,180,216,0.2);">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand-teal);">📁 Presentation & Output Creation</span>
+    </div>
+    <div class="tg-row" style="grid-template-columns:140px 1fr 1.4fr;"><div style="color:var(--brand-teal);font-weight:600;font-size:12px;">Slide Decks (PPTX)</div><div class="tg-label" style="font-size:12px;">Build branded PowerPoint presentations from briefs, data, or meeting notes</div><div class="tg-ex">Turn this QBR data into a 10-slide executive deck in EchoStar brand template</div></div>
+    <div class="tg-row" style="grid-template-columns:140px 1fr 1.4fr;"><div style="color:var(--brand-teal);font-weight:600;font-size:12px;">Word Docs (DOCX)</div><div class="tg-label" style="font-size:12px;">Generate polished Word documents — reports, proposals, SOPs, communications</div><div class="tg-ex">Write a change management plan as a formatted Word doc based on this project brief</div></div>
+    <div class="tg-row" style="grid-template-columns:140px 1fr 1.4fr;"><div style="color:var(--brand-teal);font-weight:600;font-size:12px;">Spreadsheets (XLSX)</div><div class="tg-label" style="font-size:12px;">Build, clean, or transform data into Excel workbooks — not for BI dashboards (use QuickSight for those)</div><div class="tg-ex">Restructure this raw CSV export into a clean Excel tracker with pivot tables and conditional formatting</div></div>
+  </div>
+
+  <!-- COMBINED WORKFLOW -->
+  <div class="section-header">
+    <h2>QuickSight + Cowork Together</h2>
+    <span class="pill pill-gold">Power User Closed-Loop Pattern</span>
+  </div>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+    <div style="display:grid;grid-template-columns:60px 120px 1fr;background:var(--surface3);padding:8px 16px;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);font-weight:600;">
+      <div>Step</div><div>Tool</div><div>Action</div>
+    </div>
+    <div style="display:grid;grid-template-columns:60px 120px 1fr;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;align-items:center;"><div style="font-weight:700;color:var(--text-muted);">1</div><div style="color:#ff9900;font-weight:600;">QuickSight</div><div style="color:var(--text-muted);">Monitor your KPI dashboard. An anomaly appears: support ticket volume spiked 40% in the Western region.</div></div>
+    <div style="display:grid;grid-template-columns:60px 120px 1fr;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;align-items:center;"><div style="font-weight:700;color:var(--text-muted);">2</div><div style="color:var(--brand-teal);font-weight:600;">Cowork</div><div style="color:var(--text-muted);">Ask Cowork to search Teams messages and email threads for context on what's driving the spike.</div></div>
+    <div style="display:grid;grid-template-columns:60px 120px 1fr;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;align-items:center;"><div style="font-weight:700;color:var(--text-muted);">3</div><div style="color:var(--brand-teal);font-weight:600;">Cowork</div><div style="color:var(--text-muted);">Cowork synthesizes a root-cause brief — identifies a recent firmware update as the likely driver.</div></div>
+    <div style="display:grid;grid-template-columns:60px 120px 1fr;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;align-items:center;"><div style="font-weight:700;color:var(--text-muted);">4</div><div style="color:var(--brand-teal);font-weight:600;">Cowork</div><div style="color:var(--text-muted);">Draft a customer advisory email and an internal escalation memo. Schedule a follow-up check for 48 hours.</div></div>
+    <div style="display:grid;grid-template-columns:60px 120px 1fr;padding:10px 16px;font-size:12px;align-items:center;"><div style="font-weight:700;color:var(--text-muted);">5</div><div style="color:#ff9900;font-weight:600;">QuickSight</div><div style="color:var(--text-muted);">Track ticket volume daily to confirm the resolution is working. Share the dashboard link in the escalation thread.</div></div>
+  </div>
+
+</div>
+
+<!-- ===================== TAB: COMMS PLAN ===================== -->
+<div class="content">
+<div id="tab-comms" class="tab-panel active">
+
+  <div class="section-header">
+    <h2>Communication Cadence</h2>
+    <span class="pill pill-teal">3-Tier Rhythm</span>
+  </div>
+
+  <div class="rhythm-grid">
+
+    <!-- DAILY -->
+    <div class="rhythm-card">
+      <div class="rhythm-header daily">
+        <div class="rhythm-icon">☀️</div>
+        <div>
+          <div class="rhythm-title">Daily Pulse</div>
+          <div style="font-size:11px;color:var(--text-muted);">Operational · Frontline</div>
+        </div>
+      </div>
+      <div class="rhythm-body">
+        <div class="rhythm-item">
+          <span class="ri-channel ch-portal">Portal</span>
+          <span class="ri-text"><strong>AI Tip of the Day</strong> — Bite-sized QuickSight or Cowork workflow tip pushed to intranet/employee portal. 60 seconds or less.</span>
+        </div>
+        <div class="rhythm-item">
+          <span class="ri-channel ch-teams">Teams</span>
+          <span class="ri-text"><strong>#ai-rollout channel post</strong> — Automated metric ping: daily activations, training completions, help tickets opened.</span>
+        </div>
+        <div class="rhythm-item">
+          <span class="ri-channel ch-lms">LMS</span>
+          <span class="ri-text"><strong>Training nudge</strong> — Auto-triggered reminder to users with incomplete modules (Days 1–30 only).</span>
+        </div>
+        <div class="rhythm-item">
+          <span class="ri-channel ch-exec">Exec</span>
+          <span class="ri-text"><strong>Activation dashboard refresh</strong> — Real-time QuickSight adoption dashboard updated for AI Steering Committee review.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEKLY -->
+    <div class="rhythm-card">
+      <div class="rhythm-header weekly">
+        <div class="rhythm-icon">📅</div>
+        <div>
+          <div class="rhythm-title">Weekly Digest</div>
+          <div style="font-size:11px;color:var(--text-muted);">Stakeholder · Manager layer</div>
+        </div>
+      </div>
+      <div class="rhythm-body">
+        <div class="rhythm-item">
+          <span class="ri-channel ch-email">Email</span>
+          <span class="ri-text"><strong>AI Momentum Digest</strong> — Every Monday 8AM. Week-over-week activation rates, top use cases, spotlight on a power user story.</span>
+        </div>
+        <div class="rhythm-item">
+          <span class="ri-channel ch-exec">Exec</span>
+          <span class="ri-text"><strong>Steering Committee Flash</strong> — Friday 3PM. 1-page PDF: adoption scorecard, risk flags, decisions needed.</span>
+        </div>
+        <div class="rhythm-item">
+          <span class="ri-channel ch-teams">Teams</span>
+          <span class="ri-text"><strong>Manager Sync (30 min)</strong> — Wednesday. People managers review team adoption, surface blockers, share enablement resources.</span>
+        </div>
+        <div class="rhythm-item">
+          <span class="ri-channel ch-lms">LMS</span>
+          <span class="ri-text"><strong>Training completion report</strong> — Auto-emailed to each manager: their team's module completions and certifications earned.</span>
+        </div>
+        <div class="rhythm-item">
+          <span class="ri-channel ch-portal">Portal</span>
+          <span class="ri-text"><strong>"Wins Wall" update</strong> — Weekly highlight of a time-savings or business impact story from the field.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MONTHLY -->
+    <div class="rhythm-card">
+      <div class="rhythm-header monthly">
+        <div class="rhythm-icon">🗓</div>
+        <div>
+          <div class="rhythm-title">Monthly Review</div>
+          <div style="font-size:11px;color:var(--text-muted);">Executive · Strategic</div>
+        </div>
+      </div>
+      <div class="rhythm-body">
+        <div class="rhythm-item">
+          <span class="ri-channel ch-exec">Exec</span>
+          <span class="ri-text"><strong>AI Transformation Business Review</strong> — Full adoption scorecard, ROI estimates, phase gates, and 90-day forward plan. Presented to ELT.</span>
+        </div>
+        <div class="rhythm-item">
+          <span class="ri-channel ch-email">Email</span>
+          <span class="ri-text"><strong>All-Employee AI Update</strong> — CEO/SVP-signed note: what we've achieved, what's next, recognition of top contributors.</span>
+        </div>
+        <div class="rhythm-item">
+          <span class="ri-channel ch-teams">Teams</span>
+          <span class="ri-text"><strong>Power User Town Hall</strong> — 60-min virtual. Live demos, Q&A, roadmap preview. Recording shared to LMS.</span>
+        </div>
+        <div class="rhythm-item">
+          <span class="ri-channel ch-lms">LMS</span>
+          <span class="ri-text"><strong>Certification audit + new content drop</strong> — Review certification pass rates, release next-level training modules, recognize completions.</span>
+        </div>
+        <div class="rhythm-item">
+          <span class="ri-channel ch-portal">Portal</span>
+          <span class="ri-text"><strong>Impact Report publish</strong> — Quantified time savings, use cases deployed, business value unlocked. Shared on intranet + LinkedIn.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- AUDIENCE SEGMENTATION -->
+  <div class="section-header">
+    <h2>Audience Segmentation</h2>
+    <span class="pill pill-blue">4 Segments</span>
+  </div>
+  <div class="audience-grid">
+    <div class="audience-card">
+      <h3>🎯 <span style="color:var(--brand-teal)">Executive Leadership Team</span></h3>
+      <div class="audience-row"><div class="ar-label">Volume</div><div class="ar-value">~20 leaders</div></div>
+      <div class="audience-row"><div class="ar-label">Primary channel</div><div class="ar-value">Email digest · Exec briefing deck</div></div>
+      <div class="audience-row"><div class="ar-label">Key message</div><div class="ar-value">ROI, risk management, competitive position</div></div>
+      <div class="audience-row"><div class="ar-label">Frequency</div><div class="ar-value">Weekly flash + monthly deep-dive</div></div>
+      <div class="audience-row"><div class="ar-label">Owner</div><div class="ar-value">AI Program Exec Sponsor</div></div>
+    </div>
+    <div class="audience-card">
+      <h3>👥 <span style="color:var(--brand-gold)">People Managers</span></h3>
+      <div class="audience-row"><div class="ar-label">Volume</div><div class="ar-value">~400–600 managers</div></div>
+      <div class="audience-row"><div class="ar-label">Primary channel</div><div class="ar-value">Teams sync · LMS manager reports</div></div>
+      <div class="audience-row"><div class="ar-label">Key message</div><div class="ar-value">Team progress, removing blockers, recognition</div></div>
+      <div class="audience-row"><div class="ar-label">Frequency</div><div class="ar-value">Weekly sync + daily dashboard</div></div>
+      <div class="audience-row"><div class="ar-label">Owner</div><div class="ar-value">Change Management Lead</div></div>
+    </div>
+    <div class="audience-card">
+      <h3>⚡ <span style="color:var(--brand-green)">Power Users / Champions</span></h3>
+      <div class="audience-row"><div class="ar-label">Volume</div><div class="ar-value">500+ (Claude Cowork certified)</div></div>
+      <div class="audience-row"><div class="ar-label">Primary channel</div><div class="ar-value">Dedicated Teams channel · Town Hall</div></div>
+      <div class="audience-row"><div class="ar-label">Key message</div><div class="ar-value">Roadmap previews, advanced features, peer learning</div></div>
+      <div class="audience-row"><div class="ar-label">Frequency</div><div class="ar-value">Daily tips + monthly town hall</div></div>
+      <div class="audience-row"><div class="ar-label">Owner</div><div class="ar-value">AI Champions Program Lead</div></div>
+    </div>
+    <div class="audience-card">
+      <h3>🏢 <span style="color:var(--brand-light)">All Employees (QuickSight)</span></h3>
+      <div class="audience-row"><div class="ar-label">Volume</div><div class="ar-value">8,000 users</div></div>
+      <div class="audience-row"><div class="ar-label">Primary channel</div><div class="ar-value">Email · LMS · Intranet portal</div></div>
+      <div class="audience-row"><div class="ar-label">Key message</div><div class="ar-value">"What's in it for me" — productivity wins, job support</div></div>
+      <div class="audience-row"><div class="ar-label">Frequency</div><div class="ar-value">Daily tip + weekly digest + monthly update</div></div>
+      <div class="audience-row"><div class="ar-label">Owner</div><div class="ar-value">Internal Comms + L&D</div></div>
+    </div>
+  </div>
+
+  <!-- MILESTONE TIMELINE -->
+  <div class="section-header">
+    <h2>Rollout Communication Milestones</h2>
+    <span class="pill pill-teal">6-Month Arc</span>
+  </div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-phase">Month 0 — Pre-Launch</div>
+      <div class="tl-title">Executive Alignment & Teaser Campaign</div>
+      <div class="tl-desc">ELT briefing, AI steering committee charter, "Something big is coming" teaser emails to all-hands. Manager enablement kits distributed. LMS environment stood up.</div>
+    </div>
+    <div class="tl-item gold">
+      <div class="tl-phase">Month 1 — Launch Wave 1</div>
+      <div class="tl-title">QuickSight Activation Launch (Priority Departments)</div>
+      <div class="tl-desc">Launch email from CEO/SVP. Daily comms cadence activates. Manager sync series begins. LMS Foundations module live. First weekly digest distributed. 30-day activation target: 50% of wave 1 cohort.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-phase">Month 2 — Ramp</div>
+      <div class="tl-title">Broad QuickSight + Claude Cowork Pilot</div>
+      <div class="tl-desc">QuickSight rolls to all 8,000. Cowork pilot cohort (100 early adopters) begins. First "Wins Wall" stories published. Escalation pathways activated for blockers. Monthly ELT Business Review #1.</div>
+    </div>
+    <div class="tl-item gold">
+      <div class="tl-phase">Month 3 — Acceleration</div>
+      <div class="tl-title">Power User Certification Program Opens</div>
+      <div class="tl-desc">Claude Cowork Champion certification launches. Advanced training modules released. First Town Hall. Monthly impact report published. 90-day milestone: 80% QuickSight activation target.</div>
+    </div>
+    <div class="tl-item green">
+      <div class="tl-phase">Month 4–5 — Sustain</div>
+      <div class="tl-title">Optimization & Deep Adoption</div>
+      <div class="tl-desc">Focus shifts from activation to engagement depth and business impact. Power user community self-sustaining with peer-led content. Advanced use case library published. ROI quantification sprint.</div>
+    </div>
+    <div class="tl-item green">
+      <div class="tl-phase">Month 6 — Steady State</div>
+      <div class="tl-title">Handoff to Business-as-Usual Operations</div>
+      <div class="tl-desc">AI Center of Excellence takes ownership. Communication rhythm continues at reduced ops tempo. Annual AI Impact Report published. Program retrospective and lessons learned shared enterprise-wide.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== TAB: QS METRICS ===================== -->
+<div id="tab-metrics-qs" class="tab-panel">
+
+  <div class="section-header">
+    <h2>Amazon QuickSight Adoption Metrics</h2>
+    <span class="pill pill-gold">8,000 Users · Enterprise Scale</span>
+  </div>
+
+  <div class="insight-row">
+    <div class="insight-box teal">
+      <div class="insight-title">30-Day Target</div>
+      <div class="insight-text">50% of seats activated. All priority departments have completed Foundations training. Zero critical support backlog.</div>
+    </div>
+    <div class="insight-box gold">
+      <div class="insight-title">60-Day Target</div>
+      <div class="insight-text">70% seat activation. 40% of users have run a live dashboard in the past 7 days. 10% sharing dashboards with peers.</div>
+    </div>
+    <div class="insight-box green">
+      <div class="insight-title">90-Day Target</div>
+      <div class="insight-text">80% activation. 25+ business-relevant dashboards built. First ROI evidence documented. 5% advanced user cohort identified.</div>
+    </div>
+  </div>
+
+  <div class="tool-block" style="margin-bottom:20px;">
+    <div class="tool-block-header quicksight">
+      <div class="tool-name">📊 Amazon QuickSight</div>
+      <div class="tool-scope">8,000 users · Enterprise BI Platform</div>
+    </div>
+    <div class="tool-block-body">
+
+      <div class="metric-category">
+        <div class="metric-cat-title">🚪 Activation &amp; Onboarding</div>
+        <div class="metric-row header-row">
+          <div>Metric</div><div>Green ✓</div><div>⚠️ Watch</div><div>Cadence</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Seat Activation Rate (% of 8,000 logged in ≥1x)</div>
+          <div class="metric-target">≥80%</div>
+          <div class="metric-caution">&lt;65%</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">LMS Foundations Module Completion Rate</div>
+          <div class="metric-target">≥90%</div>
+          <div class="metric-caution">&lt;75%</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Time to First Login (avg days from provisioning)</div>
+          <div class="metric-target">≤3 days</div>
+          <div class="metric-caution">&gt;7 days</div>
+          <div><span class="metric-cadence cad-daily">Daily</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Help Desk / IT Tickets Opened (training-related)</div>
+          <div class="metric-target">&lt;2% of users</div>
+          <div class="metric-caution">&gt;5% of users</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Onboarding Survey CSAT Score</div>
+          <div class="metric-target">≥4.2 / 5.0</div>
+          <div class="metric-caution">&lt;3.5</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+      </div>
+
+      <div class="metric-category">
+        <div class="metric-cat-title">🔁 Engagement Depth</div>
+        <div class="metric-row header-row">
+          <div>Metric</div><div>Green ✓</div><div>⚠️ Watch</div><div>Cadence</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Weekly Active Users (WAU) as % of activated seats</div>
+          <div class="metric-target">≥60%</div>
+          <div class="metric-caution">&lt;40%</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Avg Sessions per Active User / Week</div>
+          <div class="metric-target">≥3 sessions</div>
+          <div class="metric-caution">&lt;1.5 sessions</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Dashboard Creation Rate (new dashboards / week)</div>
+          <div class="metric-target">≥10/week</div>
+          <div class="metric-caution">&lt;3/week</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Dashboard Sharing Rate (% shared beyond creator)</div>
+          <div class="metric-target">≥30%</div>
+          <div class="metric-caution">&lt;10%</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Advanced Feature Adoption (Q, ML Insights, etc.)</div>
+          <div class="metric-target">≥15% of WAU</div>
+          <div class="metric-caution">&lt;5%</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">30-Day Retention (active M1 → still active M2)</div>
+          <div class="metric-target">≥75%</div>
+          <div class="metric-caution">&lt;55%</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+      </div>
+
+      <div class="metric-category">
+        <div class="metric-cat-title">💰 Business Impact</div>
+        <div class="metric-row header-row">
+          <div>Metric</div><div>Green ✓</div><div>⚠️ Watch</div><div>Cadence</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Reported Hours Saved / User / Month (survey-based)</div>
+          <div class="metric-target">≥4 hrs/user</div>
+          <div class="metric-caution">&lt;1 hr/user</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Manual report requests replaced by self-serve dashboards</div>
+          <div class="metric-target">≥50 reports</div>
+          <div class="metric-caution">&lt;10 reports</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Data-driven decisions documented via use case log</div>
+          <div class="metric-target">≥5/month</div>
+          <div class="metric-caution">0 documented</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+      </div>
+
+      <div class="metric-category">
+        <div class="metric-cat-title">💬 Sentiment &amp; Readiness</div>
+        <div class="metric-row header-row">
+          <div>Metric</div><div>Green ✓</div><div>⚠️ Watch</div><div>Cadence</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Training Confidence Score (post-module pulse)</div>
+          <div class="metric-target">≥80% confident</div>
+          <div class="metric-caution">&lt;60%</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Manager Readiness Index (manager survey)</div>
+          <div class="metric-target">≥4.0 / 5.0</div>
+          <div class="metric-caution">&lt;3.0</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Employee NPS on AI Program</div>
+          <div class="metric-target">≥+30</div>
+          <div class="metric-caution">&lt;0</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== TAB: COWORK METRICS ===================== -->
+<div id="tab-metrics-cw" class="tab-panel">
+
+  <div class="section-header">
+    <h2>Claude Cowork Adoption Metrics</h2>
+    <span class="pill pill-teal">500+ Power Users · Targeted Cohort</span>
+  </div>
+
+  <div class="insight-row">
+    <div class="insight-box teal">
+      <div class="insight-title">30-Day Target</div>
+      <div class="insight-text">100% of cohort installed and activated. 80% have completed ≥1 full workflow task. First 10 use cases catalogued.</div>
+    </div>
+    <div class="insight-box gold">
+      <div class="insight-title">60-Day Target</div>
+      <div class="insight-text">70% using Cowork ≥3x/week. 50% have created reusable skills or workflows. 5 documented time-savings stories.</div>
+    </div>
+    <div class="insight-box green">
+      <div class="insight-title">90-Day Target</div>
+      <div class="insight-text">Power User certification earned by 80% of cohort. 25 peer-validated use cases. Measurable productivity lift in at least 2 business units.</div>
+    </div>
+  </div>
+
+  <div class="tool-block">
+    <div class="tool-block-header cowork">
+      <div class="tool-name">🤖 Claude Cowork</div>
+      <div class="tool-scope">500+ power users · Desktop AI Automation</div>
+    </div>
+    <div class="tool-block-body">
+
+      <div class="metric-category">
+        <div class="metric-cat-title">🚪 Activation &amp; Onboarding</div>
+        <div class="metric-row header-row">
+          <div>Metric</div><div>Green ✓</div><div>⚠️ Watch</div><div>Cadence</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Seat Activation Rate (installed + first session)</div>
+          <div class="metric-target">100%</div>
+          <div class="metric-caution">&lt;85%</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Time to First Meaningful Task Completed</div>
+          <div class="metric-target">≤5 days</div>
+          <div class="metric-caution">&gt;14 days</div>
+          <div><span class="metric-cadence cad-daily">Daily</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Onboarding Checklist Completion Rate</div>
+          <div class="metric-target">≥95%</div>
+          <div class="metric-caution">&lt;80%</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Connector Setup Rate (≥1 connector authorized)</div>
+          <div class="metric-target">≥85%</div>
+          <div class="metric-caution">&lt;60%</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Skill Library Access Rate (opened ≥1 skill)</div>
+          <div class="metric-target">≥90%</div>
+          <div class="metric-caution">&lt;70%</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+      </div>
+
+      <div class="metric-category">
+        <div class="metric-cat-title">🔁 Engagement Depth</div>
+        <div class="metric-row header-row">
+          <div>Metric</div><div>Green ✓</div><div>⚠️ Watch</div><div>Cadence</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Daily Active Users (DAU) as % of cohort</div>
+          <div class="metric-target">≥50%</div>
+          <div class="metric-caution">&lt;25%</div>
+          <div><span class="metric-cadence cad-daily">Daily</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Weekly Active Users (WAU) as % of cohort</div>
+          <div class="metric-target">≥80%</div>
+          <div class="metric-caution">&lt;60%</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Tasks delegated per active user / week (Cowork jobs)</div>
+          <div class="metric-target">≥5 tasks</div>
+          <div class="metric-caution">&lt;2 tasks</div>
+          <div><span class="metric-cadence cad-weekly">Weekly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Skill/Workflow Creation Rate (user-created skills)</div>
+          <div class="metric-target">≥2 per user/mo</div>
+          <div class="metric-caution">&lt;0.5/mo</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Cross-connector task rate (tasks using ≥2 connectors)</div>
+          <div class="metric-target">≥30% of tasks</div>
+          <div class="metric-caution">&lt;10%</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Scheduled / automated task adoption</div>
+          <div class="metric-target">≥40% of users</div>
+          <div class="metric-caution">&lt;15%</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Peer skill sharing rate (skills shared to team)</div>
+          <div class="metric-target">≥25% of users</div>
+          <div class="metric-caution">&lt;5%</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+      </div>
+
+      <div class="metric-category">
+        <div class="metric-cat-title">💰 Business Impact</div>
+        <div class="metric-row header-row">
+          <div>Metric</div><div>Green ✓</div><div>⚠️ Watch</div><div>Cadence</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Self-reported hours saved / user / week</div>
+          <div class="metric-target">≥3 hrs/week</div>
+          <div class="metric-caution">&lt;1 hr/week</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Documented use cases in EchoStar use case library</div>
+          <div class="metric-target">≥25 use cases</div>
+          <div class="metric-caution">&lt;5</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Business unit AI workflows deployed to team-wide use</div>
+          <div class="metric-target">≥5 workflows</div>
+          <div class="metric-caution">&lt;1</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Estimated annualized productivity value (hrs × loaded cost)</div>
+          <div class="metric-target">≥$2M/yr</div>
+          <div class="metric-caution">&lt;$500K/yr</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+      </div>
+
+      <div class="metric-category">
+        <div class="metric-cat-title">💬 Sentiment &amp; Readiness</div>
+        <div class="metric-row header-row">
+          <div>Metric</div><div>Green ✓</div><div>⚠️ Watch</div><div>Cadence</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Power User NPS (recommend to colleague)</div>
+          <div class="metric-target">≥+50</div>
+          <div class="metric-caution">&lt;+20</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Power User Certification Pass Rate</div>
+          <div class="metric-target">≥80% of cohort</div>
+          <div class="metric-caution">&lt;60%</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Self-efficacy score (I can complete complex tasks independently)</div>
+          <div class="metric-target">≥4.3 / 5.0</div>
+          <div class="metric-caution">&lt;3.5</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-name">Champion referral rate (nominated new power users)</div>
+          <div class="metric-target">≥15% of cohort</div>
+          <div class="metric-caution">&lt;5%</div>
+          <div><span class="metric-cadence cad-monthly">Monthly</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== TAB: POWER USERS ===================== -->
+<div id="tab-power-users" class="tab-panel">
+
+  <div class="section-header">
+    <h2>Power User Framework</h2>
+    <span class="pill pill-green">3-Tier Certification Model</span>
+  </div>
+
+  <div class="power-user-grid">
+    <div class="pu-card">
+      <div class="pu-header qs">📊 QuickSight Power User Definition</div>
+      <div class="pu-body">
+        <div class="pu-tier">
+          <span class="tier-badge tier-active">Active</span>
+          <div class="tier-def"><strong>Active User:</strong> Logged in ≥2x/week, views existing dashboards, interacts with filters. Completes Foundations LMS module. Baseline engagement.</div>
+        </div>
+        <div class="pu-tier">
+          <span class="tier-badge tier-advanced">Advanced</span>
+          <div class="tier-def"><strong>Advanced User:</strong> Builds and publishes ≥2 original dashboards/month. Uses Q (natural language queries). Shares dashboards with ≥5 team members. Completes Intermediate LMS certification.</div>
+        </div>
+        <div class="pu-tier">
+          <span class="tier-badge tier-power">Power User</span>
+          <div class="tier-def"><strong>Power User / Champion:</strong> Authors enterprise-quality dashboards used by entire business units. Mentors peers. Demonstrates ≥4 hrs/month of documented time savings. Completes Advanced certification. Nominated to AI Champions network.</div>
+        </div>
+      </div>
+    </div>
+    <div class="pu-card">
+      <div class="pu-header cw">🤖 Claude Cowork Power User Definition</div>
+      <div class="pu-body">
+        <div class="pu-tier">
+          <span class="tier-badge tier-active">Active</span>
+          <div class="tier-def"><strong>Active User:</strong> Uses Cowork ≥3x/week. Has completed ≥1 multi-step task delegation. ≥1 connector authorized. Completed Cowork Foundations onboarding.</div>
+        </div>
+        <div class="pu-tier">
+          <span class="tier-badge tier-advanced">Advanced</span>
+          <div class="tier-def"><strong>Advanced User:</strong> Creates reusable skills or workflows. Uses ≥2 connectors per session. Delegates ≥5 tasks/week. Documents ≥1 use case in shared library. Completes Advanced Cowork LMS track.</div>
+        </div>
+        <div class="pu-tier">
+          <span class="tier-badge tier-power">Power User</span>
+          <div class="tier-def"><strong>Power User / Champion:</strong> Earns EchoStar Cowork Power User Certification. Publishes ≥3 team-shared workflows. Self-reports ≥3 hrs/week savings. Participates in monthly town hall. Nominates peers. Acts as team AI ambassador.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESCALATION / INTERVENTION TABLE -->
+  <div class="section-header">
+    <h2>Intervention Triggers</h2>
+    <span class="pill pill-gold">Early Warning System</span>
+  </div>
+  <table class="escalation-table">
+    <thead>
+      <tr><th>Signal</th><th>Threshold</th><th>Owner</th><th>Response Action</th><th>SLA</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Activation stall — department below target</td>
+        <td>&lt;50% at day 21</td>
+        <td>Change Mgmt Lead</td>
+        <td>Manager outreach + skip-level call + incentive activation</td>
+        <td>48 hrs</td>
+      </tr>
+      <tr>
+        <td>High support ticket volume</td>
+        <td>&gt;5% of users week 1–4</td>
+        <td>IT / L&D</td>
+        <td>Emergency FAQ drop, LMS micro-module, live office hours</td>
+        <td>24 hrs</td>
+      </tr>
+      <tr>
+        <td>Power user cohort drop-off</td>
+        <td>WAU &lt;60% in month 2</td>
+        <td>Champions Lead</td>
+        <td>1:1 check-ins, use case unblocking session, cohort re-engagement email</td>
+        <td>72 hrs</td>
+      </tr>
+      <tr>
+        <td>Negative sentiment signal</td>
+        <td>NPS &lt;0 or CSAT &lt;3.5</td>
+        <td>Exec Sponsor</td>
+        <td>Focused listening session, program pivot review, ELT escalation</td>
+        <td>1 week</td>
+      </tr>
+      <tr>
+        <td>No documented use cases by month 2</td>
+        <td>0 use cases logged</td>
+        <td>Program Manager</td>
+        <td>Structured use case harvest workshop, incentive for first submission</td>
+        <td>1 week</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+<!-- ===================== TAB: GOVERNANCE ===================== -->
+<div id="tab-governance" class="tab-panel">
+
+  <div class="section-header">
+    <h2>Governance &amp; RACI</h2>
+    <span class="pill pill-blue">Ownership Matrix</span>
+  </div>
+
+  <table class="raci-table">
+    <thead>
+      <tr>
+        <th style="width:30%">Activity</th>
+        <th>Exec Sponsor</th>
+        <th>Program Manager</th>
+        <th>Change Mgmt Lead</th>
+        <th>L&D / LMS Owner</th>
+        <th>IT / Ops</th>
+        <th>Internal Comms</th>
+        <th>People Managers</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ELT Monthly Business Review</td>
+        <td><span class="r-badge r-A">A</span></td>
+        <td><span class="r-badge r-R">R</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+      </tr>
+      <tr>
+        <td>Weekly Steering Committee Flash</td>
+        <td><span class="r-badge r-A">A</span></td>
+        <td><span class="r-badge r-R">R</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-dash">—</span></td>
+      </tr>
+      <tr>
+        <td>All-Employee Email Comms</td>
+        <td><span class="r-badge r-A">A</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-R">R</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+      </tr>
+      <tr>
+        <td>LMS Training Content &amp; Modules</td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-A">A</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-R">R</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+      </tr>
+      <tr>
+        <td>Manager Sync Series</td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-A">A</span></td>
+        <td><span class="r-badge r-R">R</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-dash">—</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-R">R</span></td>
+      </tr>
+      <tr>
+        <td>Adoption Metrics Dashboard</td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-A">A</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-R">R</span></td>
+        <td><span class="r-dash">—</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+      </tr>
+      <tr>
+        <td>Power User Certification Program</td>
+        <td><span class="r-badge r-A">A</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-R">R</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+      </tr>
+      <tr>
+        <td>Escalation Response (intervention triggers)</td>
+        <td><span class="r-badge r-A">A</span></td>
+        <td><span class="r-badge r-R">R</span></td>
+        <td><span class="r-badge r-R">R</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+      </tr>
+      <tr>
+        <td>Monthly Impact Report</td>
+        <td><span class="r-badge r-A">A</span></td>
+        <td><span class="r-badge r-R">R</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-C">C</span></td>
+        <td><span class="r-badge r-R">R</span></td>
+        <td><span class="r-badge r-I">I</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;font-size:12px;color:var(--text-muted);">
+    <strong style="color:var(--text);">RACI Key:</strong> &nbsp;
+    <span class="r-badge r-R">R</span> Responsible — does the work &nbsp;|&nbsp;
+    <span class="r-badge r-A">A</span> Accountable — owns the outcome &nbsp;|&nbsp;
+    <span class="r-badge r-C">C</span> Consulted — provides input &nbsp;|&nbsp;
+    <span class="r-badge r-I">I</span> Informed — kept in the loop
+  </div>
+
+</div>
+</div><!-- /content -->
+
+<footer>
+  <div>EchoStar AI Transformation Program</div>
+  <div>AI Rollout Command Center · Built for Exec Review</div>
+  <div id="footer-date"></div>
+</footer>
+
+<script>
+  function showTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+  document.getElementById('footer-date').textContent = new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+</script>
+</body>
+</html>
